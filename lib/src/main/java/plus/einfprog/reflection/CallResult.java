@@ -12,6 +12,6 @@ public class CallResult {
     }
 
     public InstanceWrapper wrap(Class<?> clazz) {
-        return new InstanceWrapper(new ClassWrapper(clazz), result);
+        return new InstanceWrapper(clazz, result);
     }
 }
