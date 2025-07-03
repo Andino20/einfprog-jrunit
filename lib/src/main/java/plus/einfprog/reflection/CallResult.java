@@ -7,7 +7,11 @@ public class CallResult {
         this.result = result;
     }
 
-    public <T> T As() {
+    public <T> T cast() {
         return (T) result;
+    }
+
+    public InstanceWrapper wrap(Class<?> clazz) {
+        return new InstanceWrapper(new ClassWrapper(clazz), result);
     }
 }
