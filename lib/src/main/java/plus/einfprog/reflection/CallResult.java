@@ -7,6 +7,10 @@ public class CallResult {
         this.result = result;
     }
 
+    public Object get() {
+        return result;
+    }
+
     public <T> T cast() {
         return (T) result;
     }
