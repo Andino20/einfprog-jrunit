@@ -3,8 +3,8 @@ package plus.einfprog.reflection;
 import java.lang.reflect.Method;
 
 public class InstanceWrapper {
-    private ClassWrapper clazz;
-    private Object instance;
+    private final ClassWrapper clazz;
+    private final Object instance;
 
     protected InstanceWrapper(ClassWrapper clazz, Object instance) {
         this.clazz = clazz;
