@@ -3,6 +3,7 @@ package plus.einfprog.testsubjects;
 /**
  * Simple class for testing reflection utilities
  */
+@SuppressWarnings("unused")
 public class ReflectionTestSubject {
 
     // Fields with different access modifiers
@@ -48,6 +49,7 @@ public class ReflectionTestSubject {
     }
 
     // Method that throws exception
+    @SuppressWarnings("RedundantThrows")
     public void throwingMethod() throws Exception {
         throw new RuntimeException("test exception");
     }

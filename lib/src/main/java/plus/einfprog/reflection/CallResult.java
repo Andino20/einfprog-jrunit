@@ -1,7 +1,7 @@
 package plus.einfprog.reflection;
 
 public class CallResult {
-    private Object result;
+    private final Object result;
 
     public CallResult(Object result) {
         this.result = result;
