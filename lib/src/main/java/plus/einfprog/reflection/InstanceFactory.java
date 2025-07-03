@@ -3,7 +3,7 @@ package plus.einfprog.reflection;
 import java.lang.reflect.Constructor;
 
 public class InstanceFactory {
-    private Class<?> clazz;
+    private final Class<?> clazz;
 
     public InstanceFactory(Class<?> clazz) {
         this.clazz = clazz;
