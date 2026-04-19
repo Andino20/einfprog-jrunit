@@ -7,5 +7,5 @@ repositories {
 }
 
 dependencies {
-    testImplementation(":lib")
+    testImplementation(project(":lib"))
 }
