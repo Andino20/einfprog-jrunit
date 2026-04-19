@@ -4,3 +4,4 @@ plugins {
 
 rootProject.name = "einfprog-jrunit"
 include("lib")
+include("examples")
