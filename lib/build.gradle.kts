@@ -9,6 +9,10 @@ plugins {
 group = "plus.einfprog"
 version = "0.1.0"
 
+base {
+    archivesName = "einfprog-jrunit"
+}
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
