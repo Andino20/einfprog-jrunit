@@ -1,6 +1,8 @@
 [versions]
 junit-jupiter = "6.0.1"
+joor = "0.9.15"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
+joor = { group = "org.jooq", name = "joor", version.ref = "joor" }

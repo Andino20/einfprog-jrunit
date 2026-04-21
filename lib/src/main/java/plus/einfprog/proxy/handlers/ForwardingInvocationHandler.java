@@ -1,11 +1,8 @@
 package plus.einfprog.proxy.handlers;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-import static plus.einfprog.Util.types;
-
-public class ForwardingInvocationHandler implements InvocationHandler {
+public class ForwardingInvocationHandler implements SubjectInvocationHandler {
 
     private final Object subject;
 
@@ -14,10 +11,13 @@ public class ForwardingInvocationHandler implements InvocationHandler {
     }
 
     @Override
+    public Object getSubject() {
+        return subject;
+    }
+
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        String name = method.getName();
-        Class<?>[] types = types(args);
-        return subject.getClass().getMethod(name, types).invoke(subject, args);
+        return method.invoke(subject, args);
     }
 
 }
