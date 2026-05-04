@@ -1,7 +1,5 @@
 package plus.einfprog.proxy;
 
-import plus.einfprog.proxy.handlers.SubjectInvocationHandler;
-
 import java.lang.reflect.InvocationHandler;
 import java.util.Arrays;
 import java.util.Objects;

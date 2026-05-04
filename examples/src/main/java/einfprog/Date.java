@@ -6,13 +6,17 @@ public class Date {
     private int month;
     private int day;
 
-    public Date(int year, int month, int day) {
+    private Date(int year, int month, int day) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+    }
+
+    public static Date createDate(int year, int month, int day) {
         if (year >= 2022 && year <= 9999 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-            this.year = year;
-            this.month = month;
-            this.day = day;
-        } else
-            throw new IllegalArgumentException("Invalid date");
+            return new Date(year, month, day);
+        }
+        return null;
     }
 
     public int compareTo(Date d) {

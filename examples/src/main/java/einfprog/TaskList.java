@@ -161,9 +161,4 @@ public class TaskList {
         }
         return changed;
     }
-
-
-    public int foo() {
-        return 5;
-    }
 }
