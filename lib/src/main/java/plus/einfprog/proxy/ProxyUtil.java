@@ -31,8 +31,8 @@ public interface ProxyUtil {
         boolean isProxy = java.lang.reflect.Proxy.isProxyClass(proxy.getClass());
         if (isProxy) {
             InvocationHandler handler = java.lang.reflect.Proxy.getInvocationHandler(proxy);
-            if (handler instanceof SubjectInvocationHandler subjectHandler) {
-                return subjectHandler.getSubject();
+            if (handler instanceof TargetInvocationHandler subjectHandler) {
+                return subjectHandler.getTarget();
             }
         }
         return proxy;

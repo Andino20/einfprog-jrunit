@@ -1,13 +1,14 @@
 package plus.einfprog.proxy;
 
 import plus.einfprog.pipeline.InvocationPipeline;
-import plus.einfprog.pipeline.MethodCall;
-import plus.einfprog.pipeline.MethodCallResult;
+import plus.einfprog.pipeline.dto.MethodCall;
+import plus.einfprog.pipeline.dto.MethodCallResult;
 
-import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
-public class ProxyDelegate implements InvocationHandler {
+public class ProxyDelegate implements TargetInvocationHandler {
 
     private final Object target;
     private final InvocationPipeline pipeline;
@@ -19,16 +20,25 @@ public class ProxyDelegate implements InvocationHandler {
 
     @Override
     public Object invoke(Object o, Method method, Object[] args) throws Throwable {
-        MethodCallResult result = null;
         try {
-            MethodCall call = pipeline.before().run(new MethodCall(target, method, args));
-            result = new MethodCallResult(call.method().invoke(call.target(), call.args()));
+            UUID traceId = UUID.randomUUID();
+            MethodCall call = pipeline.before().run(new MethodCall(traceId, target, method, args));
+            Object returnValue = invoke(call);
+            MethodCallResult result = pipeline.after().run(new MethodCallResult(traceId, call, returnValue));
+
+            return result.returnValue();
         } catch (Throwable t) {
             throw pipeline.exception().run(t);
-        } finally {
-            pipeline.after().run(result);
         }
-        return result.returnValue();
+    }
+
+    public Object invoke(MethodCall call) throws IllegalAccessException, InvocationTargetException {
+        return call.method().invoke(target, call.args());
+    }
+
+    @Override
+    public Object getTarget() {
+        return target;
     }
 
 }

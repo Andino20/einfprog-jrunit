@@ -1,27 +1,28 @@
 package plus.einfprog.proxy;
 
-import plus.einfprog.proxy.handlers.AutoWrappingHandler;
-import plus.einfprog.proxy.handlers.ForwardingInvocationHandler;
-import plus.einfprog.proxy.handlers.SubjectInvocationHandler;
+import plus.einfprog.pipeline.InvocationPipeline;
+import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
 
 public class ProxyBuilder<T> {
 
     private final Class<T> proxyClass;
     private final Object subject;
-    private SubjectInvocationHandler handler;
+    private final InvocationPipeline pipeline = InvocationPipeline.empty();
 
     public ProxyBuilder(Class<T> proxyClass, Object subject) {
         this.proxyClass = proxyClass;
         this.subject = subject;
-        handler = new ForwardingInvocationHandler(subject);
     }
 
     public ProxyBuilder<T> autoWrapping() {
-        handler = new AutoWrappingHandler(subject, handler);
+        ProxyAutoWrapper autoWrapper = new ProxyAutoWrapper();
+        pipeline.before().add(autoWrapper);
+        pipeline.after().add(autoWrapper);
         return this;
     }
 
     public T build() {
+        ProxyDelegate handler = new ProxyDelegate(subject, pipeline);
         return proxyClass.cast(java.lang.reflect.Proxy.newProxyInstance(
                 proxyClass.getClassLoader(), new Class<?>[]{proxyClass}, handler));
     }
