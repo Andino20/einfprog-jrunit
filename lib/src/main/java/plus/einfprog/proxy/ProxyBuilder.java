@@ -16,8 +16,8 @@ public class ProxyBuilder<T> {
 
     public ProxyBuilder<T> autoWrapping() {
         ProxyAutoWrapper autoWrapper = new ProxyAutoWrapper();
-        pipeline.before().add(autoWrapper);
-        pipeline.after().add(autoWrapper);
+        pipeline.before().addFirst(autoWrapper);
+        pipeline.after().addLast(autoWrapper);
         return this;
     }
 

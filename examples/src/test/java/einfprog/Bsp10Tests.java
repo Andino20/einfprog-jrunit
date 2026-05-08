@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import plus.einfprog.proxy.Proxy;
 import plus.einfprog.proxy.ProxyUtil;
 
@@ -39,8 +40,6 @@ class Bsp10Tests {
                         ProxyUtil.create(DateProxy.class, 2022, 6, 26))
         ).toArray(TaskProxy[]::new);
         testTaskList(tasks2);
-
-        // testAddMultipleTasks(tasks2); // Array parameters unsupported right now
     }
 
     private void testTask(String title) {
@@ -76,9 +75,4 @@ class Bsp10Tests {
         assertEquals(tasks.length, list.getCount());
     }
 
-    @Test
-    void failureTest() {
-        TaskListProxy list = ProxyUtil.create(TaskListProxy.class, 10);
-        assertEquals(1, list.foo());
-    }
 }

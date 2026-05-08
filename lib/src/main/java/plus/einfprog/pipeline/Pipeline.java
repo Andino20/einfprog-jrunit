@@ -13,8 +13,12 @@ public class Pipeline<T, F> {
         this.adapter = adapter;
     }
 
-    public void add(F hook) {
+    public void addLast(F hook) {
         this.hooks.add(hook);
+    }
+
+    public void addFirst(F hook) {
+        this.hooks.addFirst(hook);
     }
 
     public T run(T t) {
