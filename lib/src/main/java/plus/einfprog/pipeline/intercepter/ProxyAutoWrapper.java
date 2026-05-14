@@ -4,7 +4,7 @@ import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
 import plus.einfprog.proxy.Proxy;
-import plus.einfprog.proxy.ProxyUtil;
+import plus.einfprog.proxy.ProxyHelper;
 import plus.einfprog.proxy.TargetInvocationHandler;
 
 import java.lang.reflect.InvocationHandler;
@@ -34,7 +34,7 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
     public MethodCallResult intercept(MethodCallResult result) {
         Class<?> expectedReturnType = originals.remove(result.id()).getReturnType();
         if (expectedReturnType.isAnnotationPresent(Proxy.class)) {
-            return new MethodCallResult(result.id(), result.call(), ProxyUtil.wrap(result.returnValue(), expectedReturnType));
+            return new MethodCallResult(result.id(), result.call(), ProxyHelper.wrap(result.returnValue(), expectedReturnType));
         }
         return result;
     }

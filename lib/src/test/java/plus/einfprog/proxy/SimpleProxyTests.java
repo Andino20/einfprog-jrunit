@@ -55,20 +55,20 @@ class SimpleProxyTests {
 
     @Test
     void invokeProxyMethodTest() {
-        FooProxy foo = ProxyUtil.create(FooProxy.class);
+        FooProxy foo = ProxyHelper.create(FooProxy.class);
         Assertions.assertEquals(0, foo.bar());
     }
 
     @Test
     void invokeProxyMethodWithParametersTest() {
-        FooProxy foo = ProxyUtil.create(FooProxy.class);
+        FooProxy foo = ProxyHelper.create(FooProxy.class);
         Assertions.assertEquals("Hello 1", foo.appendIntToString("Hello ", 1));
     }
 
     @Test
     void proxyAutoboxingTest() {
-        FooProxy f1 = ProxyUtil.create(FooProxy.class, "Hello ");
-        FooProxy f2 = ProxyUtil.create(FooProxy.class, "World");
+        FooProxy f1 = ProxyHelper.create(FooProxy.class, "Hello ");
+        FooProxy f2 = ProxyHelper.create(FooProxy.class, "World");
 
         FooProxy f3 = f1.concatS(f2);
         Assertions.assertEquals("Hello World", f3.getS());
@@ -76,7 +76,7 @@ class SimpleProxyTests {
 
     @Test
     void proxyAutoboxingTest2() {
-        FooProxy f1 = ProxyUtil.create(FooProxy.class);
+        FooProxy f1 = ProxyHelper.create(FooProxy.class);
         Assertions.assertEquals(3, f1.add(Integer.valueOf(1), Integer.valueOf(2)));
     }
 
