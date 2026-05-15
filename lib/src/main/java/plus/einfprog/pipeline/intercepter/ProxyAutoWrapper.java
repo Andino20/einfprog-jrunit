@@ -33,6 +33,17 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
     @Override
     public MethodCallResult intercept(MethodCallResult result) {
         Class<?> expectedReturnType = originals.remove(result.id()).getReturnType();
+
+        if (expectedReturnType.isArray()) {
+            Class<?> baseComponentType = expectedReturnType.getComponentType();
+            while (baseComponentType.isArray())
+                baseComponentType = baseComponentType.getComponentType();
+
+            if (ProxyHelper.isProxyClass(baseComponentType)) {
+                return new MethodCallResult(result.id(), result.call(), ProxyHelper.deepWrapAsProxyArray(result.returnValue(), baseComponentType));
+            }
+        }
+
         if (expectedReturnType.isAnnotationPresent(Proxy.class)) {
             return new MethodCallResult(result.id(), result.call(), ProxyHelper.wrap(result.returnValue(), expectedReturnType));
         }
@@ -63,7 +74,8 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
                         targetClass = targetClass.arrayType();
                     }
                     return targetClass;
-                }
+                } else
+                    return clazz;
             }
 
             Proxy pa = clazz.getDeclaredAnnotation(Proxy.class);
@@ -84,6 +96,17 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
 
     private static Object unwrapInstance(Object o) {
         if (o == null) return null;
+
+        if (o.getClass().isArray()) {
+            Class<?> componentClass = o.getClass();
+            while (componentClass.isArray())
+                componentClass = componentClass.getComponentType();
+
+            return ProxyHelper.isProxyClass(componentClass) ?
+                    ProxyHelper.deepUnwrapProxyArray(o) :
+                    o;
+        }
+
         boolean isProxy = java.lang.reflect.Proxy.isProxyClass(o.getClass());
         if (isProxy) {
             InvocationHandler handler = java.lang.reflect.Proxy.getInvocationHandler(o);

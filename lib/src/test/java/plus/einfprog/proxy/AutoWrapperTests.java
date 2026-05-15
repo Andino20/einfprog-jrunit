@@ -24,6 +24,12 @@ class AutoWrapperTests {
         public void barArray(Foo[] f) {
         }
 
+        public void barArray(Foo[][] f) {
+        }
+
+        public void barArray2(int[] a) {
+        }
+
         public Foo getSelf() {
             return this;
         }
@@ -38,6 +44,10 @@ class AutoWrapperTests {
         void bar(FooProxy f);
 
         void barArray(FooProxy[] f);
+
+        void barArray(FooProxy[][] f);
+
+        void barArray2(int[] a);
 
         FooProxy getSelf();
 
@@ -99,9 +109,70 @@ class AutoWrapperTests {
         MethodCall unwrappedCall = w.intercept(call);
 
         Assertions.assertArrayEquals(new Class<?>[]{args.getClass()}, unwrappedCall.method().getParameterTypes());
+        Assertions.assertInstanceOf(Foo[].class, unwrappedCall.args()[0]);
+
+        Foo[] unwrappedArgs = (Foo[]) unwrappedCall.args()[0];
         for (int i = 0; i < args.length; i++) {
-            Assertions.assertInstanceOf(Foo.class, unwrappedCall.args()[i]);
+            Assertions.assertSame(args[i], unwrappedArgs[i]);
         }
+    }
+
+    @Test
+    void shouldUnwrapMultiDimensionalArrayArguments() throws NoSuchMethodException {
+        Foo[][] args = IntStream.range(0, 10).mapToObj(i -> IntStream.range(0, 10).mapToObj(j -> new Foo()).toArray(Foo[]::new)).toArray(Foo[][]::new);
+        FooProxy[][] argProxies = Arrays.stream(args).map(a -> Arrays.stream(a).map(a1 -> ProxyHelper.wrap(a1, FooProxy.class)).toArray(FooProxy[]::new)).toArray(FooProxy[][]::new);
+
+        MethodCall call = new MethodCall(
+                UUID.randomUUID(),
+                new Foo(),
+                FooProxy.class.getMethod("barArray", FooProxy[][].class),
+                new Object[]{argProxies});
+
+        ProxyAutoWrapper w = new ProxyAutoWrapper();
+        MethodCall unwrappedCall = w.intercept(call);
+
+        Assertions.assertArrayEquals(new Class<?>[]{args.getClass()}, unwrappedCall.method().getParameterTypes());
+        Assertions.assertInstanceOf(Foo[][].class, unwrappedCall.args()[0]);
+
+        for (int x = 0; x < args.length; x++) {
+            for (int y = 0; y < args[x].length; y++) {
+                Assertions.assertSame(args[x][y], ((Foo[][]) unwrappedCall.args()[0])[x][y]);
+            }
+        }
+    }
+
+    @Test
+    void shouldNotUnwrapNonProxyArrayArguments() throws NoSuchMethodException {
+        int[] args = IntStream.range(0, 10).toArray();
+        MethodCall call = new MethodCall(
+                UUID.randomUUID(),
+                new Foo(),
+                FooProxy.class.getMethod("barArray2", int[].class),
+                new Object[]{args});
+
+        ProxyAutoWrapper w = new ProxyAutoWrapper();
+        Assertions.assertDoesNotThrow(() -> w.intercept(call));
+    }
+
+    @Test
+    void shouldWrapArrayReturnValue() throws NoSuchMethodException {
+        Foo f = new Foo();
+
+        MethodCall call = new MethodCall(
+                UUID.randomUUID(),
+                f,
+                FooProxy.class.getMethod("getSelfArray"),
+                new Object[]{});
+
+        ProxyAutoWrapper w = new ProxyAutoWrapper();
+        call = w.intercept(call);
+
+        MethodCallResult result = new MethodCallResult(call.id(), call, f.getSelfArray());
+        result = w.intercept(result);
+
+        Assertions.assertNotNull(result.returnValue());
+        Assertions.assertTrue(result.returnValue().getClass().isArray());
+        Assertions.assertEquals(FooProxy[].class, result.returnValue().getClass());
     }
 
 }
