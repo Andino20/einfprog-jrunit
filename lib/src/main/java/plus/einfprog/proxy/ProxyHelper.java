@@ -1,8 +1,11 @@
 package plus.einfprog.proxy;
 
+import org.joor.ReflectException;
+
 import java.lang.reflect.InvocationHandler;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.joor.Reflect.*;
 

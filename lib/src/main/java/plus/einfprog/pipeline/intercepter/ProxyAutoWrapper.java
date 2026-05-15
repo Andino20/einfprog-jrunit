@@ -48,6 +48,24 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
 
     private static Class<?> unwrapClass(Class<?> clazz) {
         try {
+            if (clazz.isArray()) {
+                int dim = 0;
+                Class<?> tmp = clazz;
+                while (tmp.isArray()) {
+                    tmp = tmp.getComponentType();
+                    dim++;
+                }
+
+                Proxy pa = tmp.getDeclaredAnnotation(Proxy.class);
+                if (pa != null) {
+                    Class<?> targetClass = Class.forName(pa.value());
+                    for (int i = 0; i < dim; i++) {
+                        targetClass = targetClass.arrayType();
+                    }
+                    return targetClass;
+                }
+            }
+
             Proxy pa = clazz.getDeclaredAnnotation(Proxy.class);
             return Objects.nonNull(pa) ?
                     Class.forName(pa.value()) :
