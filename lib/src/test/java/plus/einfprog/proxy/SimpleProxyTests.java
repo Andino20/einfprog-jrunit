@@ -2,8 +2,13 @@ package plus.einfprog.proxy;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import plus.einfprog.junit.EinfprogJRunitExtension;
 
 class SimpleProxyTests {
+
+    @RegisterExtension
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
     @SuppressWarnings("unused")
     public static class Foo {
