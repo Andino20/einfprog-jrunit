@@ -8,7 +8,7 @@ import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
 
-public class EinfprogJRunitExtension implements BeforeAllCallback {
+public class EinfprogJRunitExtension implements BeforeAllCallback, AutoCloseable {
 
     private final InvocationPipeline pipeline;
 
@@ -27,6 +27,11 @@ public class EinfprogJRunitExtension implements BeforeAllCallback {
 
     public static EinfprogJRunitExtension getDefault() {
         return builder().build();
+    }
+
+    @Override
+    public void close() {
+        EinfprogJRunit.clearContext();
     }
 
     public static class Builder {
