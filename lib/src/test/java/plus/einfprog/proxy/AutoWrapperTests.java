@@ -38,6 +38,10 @@ class AutoWrapperTests {
         public Foo[] getSelfArray() {
             return new Foo[]{this};
         }
+
+        public Foo[][] getSelfMultiArray() {
+            return new Foo[][]{{this}};
+        }
     }
 
     @Proxy("plus.einfprog.proxy.AutoWrapperTests$Foo")
@@ -53,6 +57,8 @@ class AutoWrapperTests {
         FooProxy getSelf();
 
         FooProxy[] getSelfArray();
+
+        FooProxy[][] getSelfMultiArray();
 
     }
 
@@ -180,6 +186,26 @@ class AutoWrapperTests {
         Assertions.assertNotNull(result.returnValue());
         Assertions.assertTrue(result.returnValue().getClass().isArray());
         Assertions.assertEquals(FooProxy[].class, result.returnValue().getClass());
+    }
+
+    @Test
+    void shouldWrapMultiDimensionalArrayReturnValue() throws NoSuchMethodException {
+        Foo f = new Foo();
+        MethodCall call = new MethodCall(
+                UUID.randomUUID(),
+                f,
+                FooProxy.class.getMethod("getSelfMultiArray"),
+                new Object[]{});
+
+        ProxyAutoWrapper w = new ProxyAutoWrapper();
+        call = w.intercept(call);
+
+        MethodCallResult result = new MethodCallResult(call.id(), call, f.getSelfMultiArray());
+        result = w.intercept(result);
+
+        Assertions.assertNotNull(result.returnValue());
+        Assertions.assertTrue(result.returnValue().getClass().isArray());
+        Assertions.assertEquals(FooProxy[][].class, result.returnValue().getClass());
     }
 
 }
