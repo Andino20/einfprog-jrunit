@@ -2,6 +2,9 @@ package plus.einfprog;
 
 public class EinfprogJRunit {
 
+    private EinfprogJRunit() {
+    }
+
     private static final ThreadLocal<Context> context = new ThreadLocal<>();
 
     public static void setContext(Context context) {
