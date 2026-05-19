@@ -10,6 +10,7 @@ import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
 
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
 class AutoWrapperTests {
@@ -151,7 +152,13 @@ class AutoWrapperTests {
                 new Object[]{args});
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
-        Assertions.assertDoesNotThrow(() -> w.intercept(call));
+        AtomicReference<MethodCall> unwrappedCallReference = new AtomicReference<>();
+        Assertions.assertDoesNotThrow(() -> unwrappedCallReference.set(w.intercept(call)));
+
+        MethodCall unwrappedCall = unwrappedCallReference.get();
+        Assertions.assertNotNull(unwrappedCall.args());
+        Assertions.assertEquals(1, unwrappedCall.args().length);
+        Assertions.assertInstanceOf(int[].class, unwrappedCall.args()[0]);
     }
 
     @Test
