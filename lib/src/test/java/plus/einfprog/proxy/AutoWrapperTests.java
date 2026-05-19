@@ -13,12 +13,14 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
+@SuppressWarnings("unused")
 class AutoWrapperTests {
 
     @RegisterExtension
     static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
     static class Foo {
+
         public void bar(Foo f) {
         }
 
