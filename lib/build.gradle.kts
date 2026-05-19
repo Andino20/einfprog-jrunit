@@ -23,6 +23,8 @@ dependencies {
 
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    implementation(libs.joor)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
