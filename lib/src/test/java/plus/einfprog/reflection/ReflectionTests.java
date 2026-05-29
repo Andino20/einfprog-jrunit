@@ -1,4 +1,4 @@
-package plus.einfprog;
+package plus.einfprog.reflection;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -13,9 +13,14 @@ class ReflectionTests {
     @RegisterExtension
     private static EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
-    private static final String FOO_CLASS_NAME = "plus.einfprog.ReflectionTests$Foo";
+    private static final String FOO_CLASS_NAME = "plus.einfprog.reflection.ReflectionTests$Foo";
 
     public static class Foo {
+
+        public static int getFive() {
+            return 5;
+        }
+
         public static int add(int a, int b) {
             return a + b;
         }
@@ -23,12 +28,16 @@ class ReflectionTests {
         public static int add2(Integer a, Integer b) {
             return a + b;
         }
+
     }
 
     @Test
     void testStaticMethodCallOnClass() {
         int result = on(FOO_CLASS_NAME).call("add", 2, 3).get();
         Assertions.assertEquals(5, result);
+
+        int five = on(FOO_CLASS_NAME).call("getFive").get();
+        Assertions.assertEquals(5, five);
     }
 
     @Test
@@ -39,7 +48,5 @@ class ReflectionTests {
         result = on(FOO_CLASS_NAME).call("add2", new Class[]{Integer.class, Integer.class}, Integer.valueOf(2), Integer.valueOf(3)).get();
         Assertions.assertEquals(5, result);
     }
-
-
 
 }
