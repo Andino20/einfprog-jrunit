@@ -9,6 +9,7 @@ import plus.einfprog.pipeline.dto.MethodCallResult;
 import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
@@ -67,11 +68,12 @@ class AutoWrapperTests {
     @Test
     void shouldUnwrapArguments() throws NoSuchMethodException {
         Foo arg = new Foo();
-        MethodCall call = new MethodCall(
-                UUID.randomUUID(),
-                new Foo(),
-                FooProxy.class.getMethod("bar", FooProxy.class),
-                new Object[]{ProxyHelper.wrap(arg, FooProxy.class)});
+        MethodCall call = MethodCall.builder()
+                .id(UUID.randomUUID())
+                .method(FooProxy.class.getMethod("bar", FooProxy.class))
+                .args(new Object[]{ProxyHelper.wrap(arg, FooProxy.class)})
+                .targetClass(Foo.class)
+                .target(new Foo()).build();
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
         MethodCall unwrappedCall = w.intercept(call);
@@ -87,11 +89,13 @@ class AutoWrapperTests {
         ProxyAutoWrapper w = new ProxyAutoWrapper();
         Foo target = new Foo();
 
-        MethodCall call = new MethodCall(
-                UUID.randomUUID(),
-                target,
-                FooProxy.class.getMethod("getSelf"),
-                new Object[]{});
+        MethodCall call = MethodCall.builder()
+                .id(UUID.randomUUID())
+                .method(FooProxy.class.getMethod("getSelf"))
+                .args(new Object[]{})
+                .targetClass(target.getClass())
+                .target(target)
+                .build();
         call = w.intercept(call);
 
         MethodCallResult result = new MethodCallResult(
@@ -108,11 +112,13 @@ class AutoWrapperTests {
         Foo[] args = IntStream.range(0, 10).mapToObj(i -> new Foo()).toArray(Foo[]::new);
         FooProxy[] argProxies = Arrays.stream(args).map(t -> ProxyHelper.wrap(t, FooProxy.class)).toArray(FooProxy[]::new);
 
-        MethodCall call = new MethodCall(
-                UUID.randomUUID(),
-                new Foo(),
-                FooProxy.class.getMethod("barArray", FooProxy[].class),
-                new Object[]{argProxies});
+        MethodCall call = MethodCall.builder()
+                .id(UUID.randomUUID())
+                .target(new Foo())
+                .targetClass(Foo.class)
+                .args(new Object[]{argProxies})
+                .method(FooProxy.class.getMethod("barArray", FooProxy[].class))
+                .build();
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
         MethodCall unwrappedCall = w.intercept(call);
@@ -131,11 +137,13 @@ class AutoWrapperTests {
         Foo[][] args = IntStream.range(0, 10).mapToObj(i -> IntStream.range(0, 10).mapToObj(j -> new Foo()).toArray(Foo[]::new)).toArray(Foo[][]::new);
         FooProxy[][] argProxies = Arrays.stream(args).map(a -> Arrays.stream(a).map(a1 -> ProxyHelper.wrap(a1, FooProxy.class)).toArray(FooProxy[]::new)).toArray(FooProxy[][]::new);
 
-        MethodCall call = new MethodCall(
-                UUID.randomUUID(),
-                new Foo(),
-                FooProxy.class.getMethod("barArray", FooProxy[][].class),
-                new Object[]{argProxies});
+        MethodCall call = MethodCall.builder()
+                .id(UUID.randomUUID())
+                .target(new Foo())
+                .targetClass(Foo.class)
+                .args(new Object[]{argProxies})
+                .method(FooProxy.class.getMethod("barArray", FooProxy[][].class))
+                .build();
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
         MethodCall unwrappedCall = w.intercept(call);
@@ -153,11 +161,13 @@ class AutoWrapperTests {
     @Test
     void shouldNotUnwrapNonProxyArrayArguments() throws NoSuchMethodException {
         int[] args = IntStream.range(0, 10).toArray();
-        MethodCall call = new MethodCall(
-                UUID.randomUUID(),
-                new Foo(),
-                FooProxy.class.getMethod("barArray2", int[].class),
-                new Object[]{args});
+        MethodCall call = MethodCall.builder()
+                .id(UUID.randomUUID())
+                .target(new Foo())
+                .targetClass(Foo.class)
+                .method(FooProxy.class.getMethod("barArray2", int[].class))
+                .args(new Object[]{args})
+                .build();
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
         AtomicReference<MethodCall> unwrappedCallReference = new AtomicReference<>();
@@ -173,11 +183,13 @@ class AutoWrapperTests {
     void shouldWrapArrayReturnValue() throws NoSuchMethodException {
         Foo f = new Foo();
 
-        MethodCall call = new MethodCall(
-                UUID.randomUUID(),
-                f,
-                FooProxy.class.getMethod("getSelfArray"),
-                new Object[]{});
+        MethodCall call = MethodCall.builder()
+                .id(UUID.randomUUID())
+                .target(f)
+                .targetClass(f.getClass())
+                .args(new Object[]{})
+                .method(FooProxy.class.getMethod("getSelfArray"))
+                .build();
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
         call = w.intercept(call);
@@ -193,11 +205,13 @@ class AutoWrapperTests {
     @Test
     void shouldWrapMultiDimensionalArrayReturnValue() throws NoSuchMethodException {
         Foo f = new Foo();
-        MethodCall call = new MethodCall(
-                UUID.randomUUID(),
-                f,
-                FooProxy.class.getMethod("getSelfMultiArray"),
-                new Object[]{});
+        MethodCall call = MethodCall.builder()
+                .id(UUID.randomUUID())
+                .target(f)
+                .targetClass(f.getClass())
+                .args(new Object[]{})
+                .method(FooProxy.class.getMethod("getSelfMultiArray"))
+                .build();
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
         call = w.intercept(call);

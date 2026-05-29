@@ -6,6 +6,8 @@ import plus.einfprog.pipeline.dto.MethodCallResult;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class ProxyDelegate implements TargetInvocationHandler {
@@ -22,7 +24,8 @@ public class ProxyDelegate implements TargetInvocationHandler {
     public Object invoke(Object o, Method method, Object[] args) throws Throwable {
         try {
             UUID traceId = UUID.randomUUID();
-            MethodCall call = pipeline.before().run(new MethodCall(traceId, target, method, args));
+
+            MethodCall call = pipeline.before().run(new MethodCall(traceId, method, Objects.requireNonNullElse(args, new Object[0]), target.getClass(), target));
             Object returnValue = invoke(call);
             MethodCallResult result = pipeline.after().run(new MethodCallResult(traceId, call, returnValue));
 

@@ -22,9 +22,10 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
         Object[] args = unwrapInstances(call.args());
 
         try {
-            Method m = call.target().getClass().getMethod(name, paramTypes);
+            Method m = call.targetClass().getMethod(name, paramTypes);
             originals.put(call.id(), call.method());
-            return new MethodCall(call.id(), call.target(), m, args);
+            return call.withMethod(m)
+                    .withArgs(args);
         } catch (NoSuchMethodException e) {
             throw new ReflectiveException(e);
         }
