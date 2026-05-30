@@ -7,7 +7,6 @@ import plus.einfprog.junit.EinfprogJRunitExtension;
 
 import static plus.einfprog.reflection.Reflected.on;
 
-
 class ReflectionTests {
 
     @RegisterExtension

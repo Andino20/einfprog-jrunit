@@ -45,7 +45,7 @@ class SimpleProxyTests {
     }
 
     @Proxy("plus.einfprog.proxy.SimpleProxyTests$Foo")
-    interface FooProxy {
+    public interface FooProxy {
 
         int bar();
 

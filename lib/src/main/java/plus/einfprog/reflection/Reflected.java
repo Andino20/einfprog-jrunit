@@ -5,15 +5,15 @@ import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
+import plus.einfprog.util.PrependedList;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
 public class Reflected {
 
-    private Class<?> type;
-    private Object target;
+    private final Class<?> type;
+    private final Object target;
 
     private Reflected(String className) throws ReflectiveException {
         try {
@@ -48,16 +48,18 @@ public class Reflected {
 
         Method m = findMatchingMethod(method, types)
                 .orElseThrow(() -> new ReflectiveException(String.format("No method %s on %s with parameters %s", method, type.getSimpleName(), Arrays.toString(types))));
-        try {
-            InvocationPipeline pipeline = EinfprogJRunit.getContext().pipeline();
+        InvocationPipeline pipeline = EinfprogJRunit.getContext().pipeline();
 
-            UUID traceId = UUID.randomUUID();
-            MethodCall mc = pipeline.before().run(new MethodCall(traceId, m, args, type, target));
-            Object returnValue = mc.method().invoke(target, mc.args());
-            MethodCallResult result = pipeline.after().run(new MethodCallResult(traceId, mc, returnValue));
+        MethodCall mc = pipeline.before().run(MethodCall.from(m)
+                .withArguments(List.of(args))
+                .withTargetClass(type)
+                .withTarget(target));
+        try {
+            Object returnValue = mc.methodHandle().invokeWithArguments(Objects.nonNull(target) ? new PrependedList<>(mc.target(), mc.arguments()) : mc.arguments());
+            MethodCallResult result = pipeline.after().run(new MethodCallResult(mc.id(), mc, returnValue));
             return new Reflected(result.returnValue());
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new ReflectiveException(e);
+        } catch (Throwable e) {
+            throw new ReflectiveException("Could not invoke method handle: " + e.getMessage());
         }
     }
 

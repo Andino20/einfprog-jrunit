@@ -3,37 +3,43 @@ package plus.einfprog.pipeline.intercepter;
 import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
+import plus.einfprog.pipeline.dto.MethodDescriptor;
 import plus.einfprog.proxy.Proxy;
 import plus.einfprog.proxy.ProxyHelper;
 import plus.einfprog.proxy.TargetInvocationHandler;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.*;
 
 public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
 
-    private final Map<UUID, Method> originals = new HashMap<>();
+    private final Map<UUID, Class<?>> originalReturnTypes = new HashMap<>();
+    private final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     @Override
     public MethodCall intercept(MethodCall call) {
-        String name = call.method().getName();
-        Class<?>[] paramTypes = unwrapClasses(call.method().getParameterTypes());
-        Object[] args = unwrapInstances(call.args());
+        String name = call.methodDescriptor().methodName();
+        Class<?>[] paramTypes = unwrapClasses(call.methodDescriptor().type().parameterArray());
+        Object[] args = unwrapInstances(call.arguments().toArray());
 
         try {
             Method m = call.targetClass().getMethod(name, paramTypes);
-            originals.put(call.id(), call.method());
-            return call.withMethod(m)
-                    .withArgs(args);
-        } catch (NoSuchMethodException e) {
+            originalReturnTypes.put(call.id(), call.methodDescriptor().type().returnType());
+            MethodHandle handle = lookup.unreflect(m);
+            return call.withMethodHandle(handle)
+                    .withMethodDescriptor(MethodDescriptor.from(m))
+                    .withArguments(List.of(args));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new ReflectiveException(e);
         }
     }
 
     @Override
     public MethodCallResult intercept(MethodCallResult result) {
-        Class<?> expectedReturnType = originals.remove(result.id()).getReturnType();
+        Class<?> expectedReturnType = originalReturnTypes.remove(result.id());
 
         if (expectedReturnType.isArray()) {
             Class<?> baseComponentType = expectedReturnType.getComponentType();

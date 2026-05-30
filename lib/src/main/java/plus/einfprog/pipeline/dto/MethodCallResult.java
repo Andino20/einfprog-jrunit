@@ -11,4 +11,12 @@ import java.util.UUID;
 public record MethodCallResult(@NonNull UUID id,
                                MethodCall call,
                                Object returnValue) {
+
+    public static MethodCallResult from(MethodCall call, Object returnValue) {
+        return MethodCallResult.builder()
+                .id(call.id())
+                .call(call)
+                .returnValue(returnValue)
+                .build();
+    }
 }
