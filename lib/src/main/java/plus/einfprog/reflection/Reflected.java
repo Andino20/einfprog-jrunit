@@ -90,7 +90,7 @@ public class Reflected {
 
     private static boolean match(Class<?>[] declared, Class<?>[] argumentTypes) {
         for (int i = 0; i < declared.length; i++) {
-            if (argumentTypes[i] == Undefined.class)
+            if (argumentTypes[i] == Any.class)
                 continue;
 
             if (!declared[i].isAssignableFrom(argumentTypes[i]))
@@ -124,7 +124,7 @@ public class Reflected {
     }
 
     private static Class<?> typeOf(Object o) {
-        if (o == null) return Undefined.class;
+        if (o == null) return Any.class;
 
         if (o.getClass() == Boolean.class)
             return boolean.class;

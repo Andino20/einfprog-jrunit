@@ -1,4 +1,4 @@
 package plus.einfprog.reflection;
 
-interface Undefined {
+interface Any {
 }
