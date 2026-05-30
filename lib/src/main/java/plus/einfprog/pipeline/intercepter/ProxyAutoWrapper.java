@@ -3,7 +3,6 @@ package plus.einfprog.pipeline.intercepter;
 import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
-import plus.einfprog.pipeline.dto.MethodDescriptor;
 import plus.einfprog.proxy.Proxy;
 import plus.einfprog.proxy.ProxyHelper;
 import plus.einfprog.proxy.TargetInvocationHandler;
@@ -30,7 +29,6 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
             originalReturnTypes.put(call.id(), call.methodDescriptor().type().returnType());
             MethodHandle handle = lookup.unreflect(m);
             return call.withMethodHandle(handle)
-                    .withMethodDescriptor(MethodDescriptor.from(m))
                     .withArguments(List.of(args));
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new ReflectiveException(e);
