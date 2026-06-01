@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import plus.einfprog.Context;
 import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.pipeline.InvocationPipeline;
+import plus.einfprog.pipeline.intercepter.MethodResolver;
 import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
 
 public class EinfprogJRunitExtension implements BeforeAllCallback, AutoCloseable {
@@ -40,6 +41,9 @@ public class EinfprogJRunitExtension implements BeforeAllCallback, AutoCloseable
 
         public EinfprogJRunitExtension build() {
             ProxyAutoWrapper autoWrapper = new ProxyAutoWrapper();
+            MethodResolver resolver = new MethodResolver();
+
+            pipeline.before().addFirst(resolver);
             pipeline.before().addFirst(autoWrapper);
             pipeline.after().addLast(autoWrapper);
 

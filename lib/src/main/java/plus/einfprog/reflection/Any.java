@@ -1,4 +1,4 @@
 package plus.einfprog.reflection;
 
-interface Any {
+public interface Any {
 }

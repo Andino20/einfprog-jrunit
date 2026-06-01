@@ -6,6 +6,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.joor.Reflect.*;
 
@@ -53,18 +54,36 @@ public interface ProxyHelper {
     }
 
     static boolean isProxyClass(Class<?> clazz) {
-        return clazz.isAnnotationPresent(Proxy.class);
+        return clazz != null && (clazz.isAnnotationPresent(Proxy.class) ||
+                Arrays.stream(clazz.getInterfaces()).anyMatch(x -> x.isAnnotationPresent(Proxy.class)));
     }
 
     static Class<?> getTargetClass(Class<?> proxyClass) throws ReflectiveException {
         try {
             Proxy annotation = proxyClass.getDeclaredAnnotation(Proxy.class);
-            if (Objects.nonNull(annotation)) {
+            if (annotation != null) {
                 return Class.forName(annotation.value());
-            } else throw new IllegalArgumentException("Class is not a proxy.");
+            } else {
+                Optional<Proxy> optAnnotation = Arrays.stream(proxyClass.getInterfaces())
+                        .map(i -> i.getAnnotation(Proxy.class))
+                        .filter(Objects::nonNull)
+                        .findAny();
+                if (optAnnotation.isPresent()) {
+                    return Class.forName(optAnnotation.get().value());
+                }
+                throw new IllegalArgumentException("Class is not a proxy.");
+            }
         } catch (ClassNotFoundException e) {
             throw new ReflectiveException(e);
         }
+    }
+
+    static Class<?> getProxyInterface(Class<?> proxyClass) {
+        return proxyClass.isAnnotationPresent(Proxy.class) ? proxyClass :
+                Arrays.stream(proxyClass.getInterfaces())
+                .filter(x -> x.isAnnotationPresent(Proxy.class))
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("Class is not a proxy."));
     }
 
     static Object deepUnwrapProxyArray(Object source) {
@@ -141,5 +160,6 @@ public interface ProxyHelper {
         }
         return arr;
     }
+
 
 }

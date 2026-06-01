@@ -1,20 +1,27 @@
 package plus.einfprog.reflection;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.proxy.Proxy;
 import plus.einfprog.proxy.ProxyHelper;
 
+import static plus.einfprog.reflection.Reflected.on;
+
 class ReflectionProxyTest {
 
     @RegisterExtension
-    private static EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    private static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
-    private static final String FOO_CLASS_NAME = "plus.einfprog.reflection.ReflectionTests$Foo";
+    private static final String FOO_CLASS_NAME = "plus.einfprog.reflection.ReflectionProxyTest$Foo";
 
     @SuppressWarnings("unused")
     public static class Foo {
+
+        public Foo getSelf() {
+            return this;
+        }
 
         public static int bar(Foo f) {
             return 42;
@@ -33,8 +40,8 @@ class ReflectionProxyTest {
     @Test
     void reflectedShouldUnwrapProxyArguments() {
         FooProxy proxy = ProxyHelper.create(FooProxy.class);
-        //int fortytwo = on(FOO_CLASS_NAME).call("bar", proxy).get();
-        //Assertions.assertEquals(42, fortytwo);
+        int fortyTwo = on(FOO_CLASS_NAME).call("bar", proxy).get();
+        Assertions.assertEquals(42, fortyTwo);
     }
 
     @Test

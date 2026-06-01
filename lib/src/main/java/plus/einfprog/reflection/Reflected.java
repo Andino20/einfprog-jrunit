@@ -5,9 +5,11 @@ import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
+import plus.einfprog.pipeline.dto.MethodDescriptor;
+import plus.einfprog.proxy.ProxyHelper;
 import plus.einfprog.util.PrependedList;
 
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodType;
 import java.util.*;
 
 public class Reflected {
@@ -42,21 +44,24 @@ public class Reflected {
 
     public Reflected call(String method, Object... args) {
         Class<?>[] types = types(args);
-        return call(method, types, args);
+        return call(method, types, Objects.nonNull(args) ? args : new Object[0]);
     }
 
     public Reflected call(String method, Class<?>[] types, Object... args) {
         if (types == null)
             throw new IllegalArgumentException("Types cannot be null");
 
-        Method m = findMatchingMethod(method, types)
-                .orElseThrow(() -> new ReflectiveException(String.format("No method %s on %s with parameters %s", method, type.getSimpleName(), Arrays.toString(types))));
         InvocationPipeline pipeline = EinfprogJRunit.getContext().pipeline();
-
-        MethodCall mc = pipeline.before().run(MethodCall.from(m)
-                .withArguments(List.of(args))
-                .withTargetClass(type)
-                .withTarget(target));
+        MethodCall mc = pipeline.before().run(MethodCall.builder()
+                .id(UUID.randomUUID())
+                .methodDescriptor(MethodDescriptor.builder()
+                        .methodName(method)
+                        .type(MethodType.methodType(Any.class, types))
+                        .build())
+                .arguments(List.of(args))
+                .targetClass(type)
+                .target(target)
+                .build());
         try {
             Object returnValue = mc.methodHandle().invokeWithArguments(isStatic ? mc.arguments() : new PrependedList<>(mc.target(), mc.arguments()));
             MethodCallResult result = pipeline.after().run(new MethodCallResult(mc.id(), mc, returnValue));
@@ -68,56 +73,6 @@ public class Reflected {
 
     public <T> T get() {
         return (T) target;
-    }
-
-    private Optional<Method> findMatchingMethod(String name, Class<?>[] types) {
-        try {
-            return Optional.of(type.getMethod(name, types));
-        } catch (NoSuchMethodException e) {
-            Class<?> t = type;
-            while (t != null) {
-                List<Method> methods = Arrays.stream(t.getDeclaredMethods())
-                        .filter(m -> m.getName().equals(name))
-                        .filter(m -> match(m.getParameterTypes(), types))
-                        .toList();
-
-                Optional<Method> mostSpecific = findMostSpecificMethodByReturnValue(methods);
-                if (mostSpecific.isPresent())
-                    return mostSpecific;
-
-                t = t.getSuperclass();
-            }
-        }
-        return Optional.empty();
-    }
-
-    private static boolean match(Class<?>[] declared, Class<?>[] argumentTypes) {
-        for (int i = 0; i < declared.length; i++) {
-            if (argumentTypes[i] == Any.class)
-                continue;
-
-            if (!declared[i].isAssignableFrom(argumentTypes[i]))
-                return false;
-        }
-        return true;
-    }
-
-    private static Optional<Method> findMostSpecificMethodByReturnValue(List<Method> methods) {
-        List<Method> specificMethods = new ArrayList<>();
-        for (Method a : methods) {
-            boolean isMostSpecific = true;
-            for (Method b : methods) {
-                Class<?> retA = a.getReturnType();
-                Class<?> retB = b.getReturnType();
-                if (a != b && !retA.equals(retB) && retA.isAssignableFrom(retB)) {
-                    isMostSpecific = false;
-                    break;
-                }
-            }
-            if (isMostSpecific)
-                specificMethods.add(a);
-        }
-        return specificMethods.stream().findAny();
     }
 
     private static Class<?>[] types(Object[] values) {
