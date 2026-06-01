@@ -14,6 +14,7 @@ public class Reflected {
 
     private final Class<?> type;
     private final Object target;
+    private final boolean isStatic;
 
     private Reflected(String className) throws ReflectiveException {
         try {
@@ -22,11 +23,13 @@ public class Reflected {
             throw new ReflectiveException(e);
         }
         this.target = null;
+        this.isStatic = true;
     }
 
     private Reflected(Object target) {
         this.target = target;
         this.type = typeOf(target);
+        this.isStatic = false;
     }
 
     public static Reflected on(String className) throws ReflectiveException {
@@ -55,7 +58,7 @@ public class Reflected {
                 .withTargetClass(type)
                 .withTarget(target));
         try {
-            Object returnValue = mc.methodHandle().invokeWithArguments(Objects.nonNull(target) ? new PrependedList<>(mc.target(), mc.arguments()) : mc.arguments());
+            Object returnValue = mc.methodHandle().invokeWithArguments(isStatic ? mc.arguments() : new PrependedList<>(mc.target(), mc.arguments()));
             MethodCallResult result = pipeline.after().run(new MethodCallResult(mc.id(), mc, returnValue));
             return new Reflected(result.returnValue());
         } catch (Throwable e) {
