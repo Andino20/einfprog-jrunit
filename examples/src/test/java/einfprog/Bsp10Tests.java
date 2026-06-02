@@ -42,6 +42,7 @@ class Bsp10Tests {
                         ProxyHelper.create(DateProxy.class, 2022, 6, 26))
         ).toArray(TaskProxy[]::new);
         testTaskList(tasks2);
+        testAddMultipleTasks(tasks2);
     }
 
     private void testTask(String title) {
@@ -71,7 +72,7 @@ class Bsp10Tests {
         }
     }
 
-    private void testAddMultipleTasks(TaskProxy[] tasks) {
+    public void testAddMultipleTasks(TaskProxy[] tasks) {
         TaskListProxy list = ProxyHelper.create(TaskListProxy.class, tasks.length);
         assertTrue(list.addTasks(tasks));
         assertEquals(tasks.length, list.getCount());
