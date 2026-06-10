@@ -4,13 +4,14 @@ import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.dto.MethodCall;
-import plus.einfprog.pipeline.dto.MethodCallResult;
 import plus.einfprog.pipeline.dto.MethodDescriptor;
 import plus.einfprog.proxy.ProxyHelper;
-import plus.einfprog.util.PrependedList;
 
 import java.lang.invoke.MethodType;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 public class Reflected {
 
@@ -62,17 +63,19 @@ public class Reflected {
                 .targetClass(type)
                 .target(target)
                 .build());
-        try {
-            Object returnValue = mc.methodHandle().invokeWithArguments(isStatic ? mc.arguments() : new PrependedList<>(mc.target(), mc.arguments()));
-            MethodCallResult result = pipeline.after().run(new MethodCallResult(mc.id(), mc, returnValue));
-            return new Reflected(result.returnValue());
-        } catch (Throwable e) {
-            throw new ReflectiveException("Could not invoke method handle: " + e.getMessage());
-        }
+        return new Reflected(pipeline.run(mc).returnValue());
     }
 
     public <T> T get() {
         return (T) target;
+    }
+
+    public <T> T as(Class<T> proxyClass) {
+        if (!ProxyHelper.isProxyClass(proxyClass))
+            throw new IllegalArgumentException("Argument has to be an interface with an @Proxy annotation");
+        if (isStatic)
+            throw new IllegalCallerException("Cannot wrap a static class in a proxy");
+        return ProxyHelper.wrap(target, proxyClass);
     }
 
     private static Class<?>[] types(Object[] values) {

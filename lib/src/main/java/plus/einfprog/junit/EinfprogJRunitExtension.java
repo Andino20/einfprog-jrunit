@@ -8,15 +8,12 @@ import plus.einfprog.Context;
 import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.collector.LinearEventHistory;
-import plus.einfprog.log.event.InvocationEvent;
 import plus.einfprog.log.format.JsonTraceFormatter;
 import plus.einfprog.log.format.TraceFormatter;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.intercepter.InvocationTracer;
 import plus.einfprog.pipeline.intercepter.MethodResolver;
 import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
-
-import java.util.List;
 
 public class EinfprogJRunitExtension implements BeforeAllCallback, AutoCloseable, TestExecutionExceptionHandler {
 
@@ -63,8 +60,8 @@ public class EinfprogJRunitExtension implements BeforeAllCallback, AutoCloseable
         public EinfprogJRunitExtension build() {
             ProxyAutoWrapper autoWrapper = new ProxyAutoWrapper();
             MethodResolver resolver = new MethodResolver();
-
             InvocationTracer tracer = new InvocationTracer(collector);
+
             pipeline.before().addLast(tracer);
             pipeline.after().addLast(tracer);
             pipeline.exception().addLast(tracer);

@@ -23,6 +23,7 @@ class ReflectionProxyTest {
             return this;
         }
 
+        @SuppressWarnings("unused")
         public static int bar(Foo f) {
             return 42;
         }
@@ -45,9 +46,9 @@ class ReflectionProxyTest {
     }
 
     @Test
-    void reflectedShouldWrapProxyReturnValues() {
-        // TODO: figure out how to handle proxies as return values of static functions
-        // e.g. on(FOO_CLASS_NAME).call("createFoo").as(FooProxy.class);
+    void reflectedWrapProxyReturnValue() {
+        FooProxy foo = on(FOO_CLASS_NAME).call("createFoo").as(FooProxy.class);
+        Assertions.assertNotNull(foo);
     }
 
 

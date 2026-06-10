@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandleInfo;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +19,8 @@ public record MethodCall(@NonNull UUID id,
                          MethodHandle methodHandle,
                          List<Object> arguments,
                          Class<?> targetClass,
-                         Object target) {
+                         Object target,
+                         boolean isStatic) {
 
     public MethodCall withMethodHandle(@NonNull MethodHandle methodHandle) {
         MethodHandleInfo info = MethodHandles.lookup().revealDirect(methodHandle);
@@ -29,6 +31,7 @@ public record MethodCall(@NonNull UUID id,
                 .arguments(arguments)
                 .targetClass(targetClass)
                 .target(target)
+                .isStatic(Modifier.isStatic(info.getModifiers()))
                 .build();
     }
 
@@ -36,6 +39,7 @@ public record MethodCall(@NonNull UUID id,
         return MethodCall.builder()
                 .id(UUID.randomUUID())
                 .methodDescriptor(MethodDescriptor.from(m))
+                .isStatic(Modifier.isStatic(m.getModifiers()))
                 .build();
     }
 }

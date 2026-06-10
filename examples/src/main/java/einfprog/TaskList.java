@@ -42,7 +42,7 @@ public class TaskList {
             return false;
         }
 
-        if (task.getTitle() == null) { // TODO: Inform Luis that this case can not happend because we can't test for null-checks in Task constructor
+        if (task.getTitle() == null) {
             return false;
         }
 
