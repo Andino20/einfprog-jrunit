@@ -5,6 +5,10 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.OptionalInt;
 
+@SuppressWarnings({
+        "unused",
+        "java:S106" // SonarQube warning for using a logger instead of System.out...
+})
 public class TaskList {
     final Task[] tasks;
 
