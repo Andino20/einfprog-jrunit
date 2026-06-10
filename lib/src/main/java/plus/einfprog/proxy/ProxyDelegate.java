@@ -19,7 +19,7 @@ public class ProxyDelegate implements TargetInvocationHandler {
     }
 
     @Override
-    public Object invoke(Object o, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object o, Method method, Object[] args) {
         MethodCallResult result = pipeline.run(MethodCall.from(method)
                 .withArguments(List.of(Objects.requireNonNullElse(args, new Object[0])))
                 .withTargetClass(target.getClass())

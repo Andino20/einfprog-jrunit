@@ -46,7 +46,7 @@ public class EinfprogJRunitExtension implements BeforeAllCallback, AutoCloseable
     }
 
     @Override
-    public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+    public void handleTestExecutionException(@NonNull ExtensionContext context, Throwable throwable) throws Throwable {
         System.err.println(formatter.format(collector.getTrace()));
         throw throwable;
     }
