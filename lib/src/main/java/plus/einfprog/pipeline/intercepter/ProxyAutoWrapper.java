@@ -3,36 +3,37 @@ package plus.einfprog.pipeline.intercepter;
 import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
+import plus.einfprog.pipeline.dto.MethodDescriptor;
 import plus.einfprog.proxy.Proxy;
 import plus.einfprog.proxy.ProxyHelper;
 import plus.einfprog.proxy.TargetInvocationHandler;
 
+import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.util.*;
 
 public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
 
-    private final Map<UUID, Method> originals = new HashMap<>();
+    private final Map<UUID, Class<?>> originalReturnTypes = new HashMap<>();
 
     @Override
     public MethodCall intercept(MethodCall call) {
-        String name = call.method().getName();
-        Class<?>[] paramTypes = unwrapClasses(call.method().getParameterTypes());
-        Object[] args = unwrapInstances(call.args());
+        String name = call.methodDescriptor().methodName();
+        Class<?>[] paramTypes = unwrapClasses(call.methodDescriptor().type().parameterArray());
+        Class<?> returnType = unwrapClass(call.methodDescriptor().type().returnType());
+        Object[] args = unwrapInstances(call.arguments().toArray());
 
-        try {
-            Method m = call.target().getClass().getMethod(name, paramTypes);
-            originals.put(call.id(), call.method());
-            return new MethodCall(call.id(), call.target(), m, args);
-        } catch (NoSuchMethodException e) {
-            throw new ReflectiveException(e);
-        }
+        originalReturnTypes.put(call.id(), call.methodDescriptor().type().returnType());
+        return call.withMethodDescriptor(MethodDescriptor.builder()
+                        .methodName(name)
+                        .type(MethodType.methodType(returnType, paramTypes))
+                        .build())
+                .withArguments(List.of(args));
     }
 
     @Override
     public MethodCallResult intercept(MethodCallResult result) {
-        Class<?> expectedReturnType = originals.remove(result.id()).getReturnType();
+        Class<?> expectedReturnType = originalReturnTypes.remove(result.id());
 
         if (expectedReturnType.isArray()) {
             Class<?> baseComponentType = expectedReturnType.getComponentType();
@@ -78,9 +79,8 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
                     return clazz;
             }
 
-            Proxy pa = clazz.getDeclaredAnnotation(Proxy.class);
-            return Objects.nonNull(pa) ?
-                    Class.forName(pa.value()) :
+            return ProxyHelper.isProxyClass(clazz) ?
+                    ProxyHelper.getTargetClass(clazz) :
                     clazz;
         } catch (ClassNotFoundException e) {
             throw new ReflectiveException(e);

@@ -4,9 +4,9 @@ import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.UUID;
+import java.util.List;
+import java.util.Objects;
 
 public class ProxyDelegate implements TargetInvocationHandler {
 
@@ -19,21 +19,12 @@ public class ProxyDelegate implements TargetInvocationHandler {
     }
 
     @Override
-    public Object invoke(Object o, Method method, Object[] args) throws Throwable {
-        try {
-            UUID traceId = UUID.randomUUID();
-            MethodCall call = pipeline.before().run(new MethodCall(traceId, target, method, args));
-            Object returnValue = invoke(call);
-            MethodCallResult result = pipeline.after().run(new MethodCallResult(traceId, call, returnValue));
-
-            return result.returnValue();
-        } catch (Throwable t) {
-            throw pipeline.exception().run(t);
-        }
-    }
-
-    public Object invoke(MethodCall call) throws IllegalAccessException, InvocationTargetException {
-        return call.method().invoke(target, call.args());
+    public Object invoke(Object o, Method method, Object[] args) {
+        MethodCallResult result = pipeline.run(MethodCall.from(method)
+                .withArguments(List.of(Objects.requireNonNullElse(args, new Object[0])))
+                .withTargetClass(target.getClass())
+                .withTarget(target));
+        return result.returnValue();
     }
 
     @Override

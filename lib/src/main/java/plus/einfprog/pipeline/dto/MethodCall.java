@@ -1,41 +1,46 @@
 package plus.einfprog.pipeline.dto;
 
-import org.jspecify.annotations.NonNull;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.With;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandleInfo;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.lang.reflect.Modifier;
+import java.util.List;
 import java.util.UUID;
 
+@With
+@Builder
 public record MethodCall(@NonNull UUID id,
+                         MethodDescriptor methodDescriptor,
+                         MethodHandle methodHandle,
+                         List<Object> arguments,
+                         Class<?> targetClass,
                          Object target,
-                         Method method,
-                         Object[] args) {
+                         boolean isStatic) {
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MethodCall that = (MethodCall) o;
-        return id.equals(that.id) && target.equals(that.target) && method.equals(that.method) && Arrays.equals(args, that.args);
+    public MethodCall withMethodHandle(@NonNull MethodHandle methodHandle) {
+        MethodHandleInfo info = MethodHandles.lookup().revealDirect(methodHandle);
+        return MethodCall.builder()
+                .id(id)
+                .methodDescriptor(MethodDescriptor.from(info))
+                .methodHandle(methodHandle)
+                .arguments(arguments)
+                .targetClass(targetClass)
+                .target(target)
+                .isStatic(Modifier.isStatic(info.getModifiers()))
+                .build();
     }
 
-    @Override
-    public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + target.hashCode();
-        result = 31 * result + method.hashCode();
-        result = 31 * result + Arrays.hashCode(args);
-        return result;
-    }
-
-    @Override
-    @NonNull
-    public String toString() {
-        return "MethodCall{" +
-                "id=" + id +
-                ", target=" + target +
-                ", method=" + method +
-                ", args=" + Arrays.toString(args) +
-                '}';
+    public static MethodCall from(Method m) {
+        return MethodCall.builder()
+                .id(UUID.randomUUID())
+                .methodDescriptor(MethodDescriptor.from(m))
+                .isStatic(Modifier.isStatic(m.getModifiers()))
+                .build();
     }
 }
+

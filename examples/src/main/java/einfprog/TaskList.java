@@ -5,6 +5,10 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.OptionalInt;
 
+@SuppressWarnings({
+        "unused",
+        "java:S106" // SonarQube warning for using a logger instead of System.out...
+})
 public class TaskList {
     final Task[] tasks;
 
@@ -42,7 +46,7 @@ public class TaskList {
             return false;
         }
 
-        if (task.getTitle() == null) { // TODO: Inform Luis that this case can not happend because we can't test for null-checks in Task constructor
+        if (task.getTitle() == null) {
             return false;
         }
 
