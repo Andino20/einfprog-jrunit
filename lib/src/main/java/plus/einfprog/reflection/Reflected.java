@@ -5,7 +5,7 @@ import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodDescriptor;
-import plus.einfprog.proxy.ProxyHelper;
+import plus.einfprog.proxy.ProxyUtil;
 
 import java.lang.invoke.MethodType;
 import java.util.Arrays;
@@ -62,6 +62,7 @@ public class Reflected {
                 .arguments(List.of(args))
                 .targetClass(type)
                 .target(target)
+                .isStatic(isStatic)
                 .build());
         return new Reflected(pipeline.run(mc).returnValue());
     }
@@ -71,11 +72,11 @@ public class Reflected {
     }
 
     public <T> T as(Class<T> proxyClass) {
-        if (!ProxyHelper.isProxyClass(proxyClass))
+        if (!ProxyUtil.isProxyClass(proxyClass))
             throw new IllegalArgumentException("Argument has to be an interface with an @Proxy annotation");
         if (isStatic)
             throw new IllegalCallerException("Cannot wrap a static class in a proxy");
-        return ProxyHelper.wrap(target, proxyClass);
+        return ProxyUtil.wrap(target, proxyClass);
     }
 
     private static Class<?>[] types(Object[] values) {

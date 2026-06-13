@@ -48,8 +48,8 @@ class ProxyPolymorphismTests {
 
     @Test
     void subclassArgumentTest() {
-        FooProxy f = ProxyHelper.create(FooProxy.class);
-        BarProxy b = ProxyHelper.create(BarProxy.class);
+        FooProxy f = ProxyUtil.create(FooProxy.class);
+        BarProxy b = ProxyUtil.create(BarProxy.class);
         Assertions.assertEquals("FooBar", f.concatNames(b));
     }
 

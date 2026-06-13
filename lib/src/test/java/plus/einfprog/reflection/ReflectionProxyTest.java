@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.proxy.Proxy;
-import plus.einfprog.proxy.ProxyHelper;
+import plus.einfprog.proxy.ProxyUtil;
 
 import static plus.einfprog.reflection.Reflected.on;
 
@@ -40,7 +40,7 @@ class ReflectionProxyTest {
 
     @Test
     void reflectedShouldUnwrapProxyArguments() {
-        FooProxy proxy = ProxyHelper.create(FooProxy.class);
+        FooProxy proxy = ProxyUtil.create(FooProxy.class);
         int fortyTwo = on(FOO_CLASS_NAME).call("bar", proxy).get();
         Assertions.assertEquals(42, fortyTwo);
     }

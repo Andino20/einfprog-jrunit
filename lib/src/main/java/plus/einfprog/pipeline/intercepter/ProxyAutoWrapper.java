@@ -1,15 +1,11 @@
 package plus.einfprog.pipeline.intercepter;
 
-import plus.einfprog.ReflectiveException;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
 import plus.einfprog.pipeline.dto.MethodDescriptor;
-import plus.einfprog.proxy.Proxy;
-import plus.einfprog.proxy.ProxyHelper;
-import plus.einfprog.proxy.TargetInvocationHandler;
+import plus.einfprog.proxy.ProxyUtil;
 
 import java.lang.invoke.MethodType;
-import java.lang.reflect.InvocationHandler;
 import java.util.*;
 
 public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
@@ -20,7 +16,7 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
     public MethodCall intercept(MethodCall call) {
         String name = call.methodDescriptor().methodName();
         Class<?>[] paramTypes = unwrapClasses(call.methodDescriptor().type().parameterArray());
-        Class<?> returnType = unwrapClass(call.methodDescriptor().type().returnType());
+        Class<?> returnType = ProxyUtil.unwrapClass(call.methodDescriptor().type().returnType());
         Object[] args = unwrapInstances(call.arguments().toArray());
 
         originalReturnTypes.put(call.id(), call.methodDescriptor().type().returnType());
@@ -34,19 +30,15 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
     @Override
     public MethodCallResult intercept(MethodCallResult result) {
         Class<?> expectedReturnType = originalReturnTypes.remove(result.id());
-
-        if (expectedReturnType.isArray()) {
-            Class<?> baseComponentType = expectedReturnType.getComponentType();
-            while (baseComponentType.isArray())
-                baseComponentType = baseComponentType.getComponentType();
-
-            if (ProxyHelper.isProxyClass(baseComponentType)) {
-                return new MethodCallResult(result.id(), result.call(), ProxyHelper.deepWrapAsProxyArray(result.returnValue(), baseComponentType));
-            }
+        Class<?> baseType = expectedReturnType;
+        while (baseType.isArray()) {
+            baseType = baseType.getComponentType();
         }
 
-        if (expectedReturnType.isAnnotationPresent(Proxy.class)) {
-            return new MethodCallResult(result.id(), result.call(), ProxyHelper.wrap(result.returnValue(), expectedReturnType));
+        if (ProxyUtil.isProxyClass(baseType)) {
+            return result.withReturnValue(expectedReturnType.isArray() ?
+                    ProxyUtil.wrapArray(result.returnValue(), baseType) :
+                    ProxyUtil.wrap(result.returnValue(), baseType));
         }
         return result;
     }
@@ -54,68 +46,14 @@ public class ProxyAutoWrapper implements BeforeInterceptor, AfterInterceptor {
     private static Class<?>[] unwrapClasses(Class<?>[] classes) {
         if (classes == null) return new Class[0];
         return Arrays.stream(classes)
-                .map(ProxyAutoWrapper::unwrapClass)
+                .map(ProxyUtil::unwrapClass)
                 .toArray(Class<?>[]::new);
-    }
-
-    private static Class<?> unwrapClass(Class<?> clazz) {
-        try {
-            if (clazz.isArray()) {
-                int dim = 0;
-                Class<?> tmp = clazz;
-                while (tmp.isArray()) {
-                    tmp = tmp.getComponentType();
-                    dim++;
-                }
-
-                Proxy pa = tmp.getDeclaredAnnotation(Proxy.class);
-                if (pa != null) {
-                    Class<?> targetClass = Class.forName(pa.value());
-                    for (int i = 0; i < dim; i++) {
-                        targetClass = targetClass.arrayType();
-                    }
-                    return targetClass;
-                } else
-                    return clazz;
-            }
-
-            return ProxyHelper.isProxyClass(clazz) ?
-                    ProxyHelper.getTargetClass(clazz) :
-                    clazz;
-        } catch (ClassNotFoundException e) {
-            throw new ReflectiveException(e);
-        }
     }
 
     private static Object[] unwrapInstances(Object[] args) {
         if (args == null) return new Object[0];
         return Arrays.stream(args)
-                .map(ProxyAutoWrapper::unwrapInstance)
+                .map(ProxyUtil::unwrap)
                 .toArray();
     }
-
-    private static Object unwrapInstance(Object o) {
-        if (o == null) return null;
-
-        if (o.getClass().isArray()) {
-            Class<?> componentClass = o.getClass();
-            while (componentClass.isArray())
-                componentClass = componentClass.getComponentType();
-
-            return ProxyHelper.isProxyClass(componentClass) ?
-                    ProxyHelper.deepUnwrapProxyArray(o) :
-                    o;
-        }
-
-        boolean isProxy = java.lang.reflect.Proxy.isProxyClass(o.getClass());
-        if (isProxy) {
-            InvocationHandler handler = java.lang.reflect.Proxy.getInvocationHandler(o);
-            if (handler instanceof TargetInvocationHandler targetHandler) {
-                return targetHandler.getTarget();
-            }
-        }
-        return o;
-    }
-
-
 }
