@@ -68,7 +68,7 @@ class AutoWrapperTests {
     void shouldUnwrapArguments() throws NoSuchMethodException {
         Foo arg = new Foo();
         MethodCall call = MethodCall.from(FooProxy.class.getMethod("bar", FooProxy.class))
-                .withArguments(List.of(ProxyHelper.wrap(arg, FooProxy.class)))
+                .withArguments(List.of(ProxyUtil.wrap(arg, FooProxy.class)))
                 .withTargetClass(Foo.class)
                 .withTarget(new Foo());
 
@@ -102,7 +102,7 @@ class AutoWrapperTests {
     @Test
     void shouldUnwrapArrayArguments() throws NoSuchMethodException {
         Foo[] args = IntStream.range(0, 10).mapToObj(i -> new Foo()).toArray(Foo[]::new);
-        FooProxy[] argProxies = Arrays.stream(args).map(t -> ProxyHelper.wrap(t, FooProxy.class)).toArray(FooProxy[]::new);
+        FooProxy[] argProxies = Arrays.stream(args).map(t -> ProxyUtil.wrap(t, FooProxy.class)).toArray(FooProxy[]::new);
 
         MethodCall call = MethodCall.from(FooProxy.class.getMethod("barArray", FooProxy[].class))
                 .withArguments(List.of((Object) argProxies))
@@ -124,7 +124,7 @@ class AutoWrapperTests {
     @Test
     void shouldUnwrapMultiDimensionalArrayArguments() throws NoSuchMethodException {
         Foo[][] args = IntStream.range(0, 10).mapToObj(i -> IntStream.range(0, 10).mapToObj(j -> new Foo()).toArray(Foo[]::new)).toArray(Foo[][]::new);
-        FooProxy[][] argProxies = Arrays.stream(args).map(a -> Arrays.stream(a).map(a1 -> ProxyHelper.wrap(a1, FooProxy.class)).toArray(FooProxy[]::new)).toArray(FooProxy[][]::new);
+        FooProxy[][] argProxies = Arrays.stream(args).map(a -> Arrays.stream(a).map(a1 -> ProxyUtil.wrap(a1, FooProxy.class)).toArray(FooProxy[]::new)).toArray(FooProxy[][]::new);
 
 
         MethodCall call = MethodCall.from(FooProxy.class.getMethod("barArray", FooProxy[][].class))
