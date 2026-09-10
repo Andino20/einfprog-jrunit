@@ -23,15 +23,15 @@ public record MethodCall(@NonNull UUID id,
                          boolean isStatic) {
 
     public MethodCall withMethodHandle(@NonNull MethodHandle methodHandle) {
-        MethodHandleInfo info = MethodHandles.lookup().revealDirect(methodHandle);
+        Method m = MethodHandles.reflectAs(Method.class, methodHandle);
         return MethodCall.builder()
                 .id(id)
-                .methodDescriptor(MethodDescriptor.from(info))
+                .methodDescriptor(MethodDescriptor.from(m))
                 .methodHandle(methodHandle)
                 .arguments(arguments)
                 .targetClass(targetClass)
                 .target(target)
-                .isStatic(Modifier.isStatic(info.getModifiers()))
+                .isStatic(Modifier.isStatic(m.getModifiers()))
                 .build();
     }
 

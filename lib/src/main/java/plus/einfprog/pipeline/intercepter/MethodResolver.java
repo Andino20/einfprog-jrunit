@@ -26,6 +26,7 @@ public class MethodResolver implements BeforeInterceptor {
         Method m = findMatchingMethod(targetClass, name, returnType, types)
                 .orElseThrow(() -> new ReflectiveException(String.format("No method %s on %s with parameters %s and return type %s",
                         name, targetClass.getSimpleName(), Arrays.toString(types), returnType)));
+        m.setAccessible(true);
 
         try {
             MethodHandle handle = lookup.unreflect(m);

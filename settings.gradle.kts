@@ -4,4 +4,5 @@ plugins {
 
 rootProject.name = "einfprog-jrunit"
 include("lib")
-include("examples")
+include("examples:proxy")
+include("examples:j25-demo")
