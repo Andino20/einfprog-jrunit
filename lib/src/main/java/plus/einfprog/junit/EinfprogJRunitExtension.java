@@ -14,6 +14,8 @@ import plus.einfprog.log.format.JsonTraceFormatter;
 import plus.einfprog.log.format.TraceFormatter;
 import plus.einfprog.pipeline.InvocationPipeline;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.function.Supplier;
 
 @AllArgsConstructor
@@ -29,7 +31,15 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
     @Override
     public void beforeEach(@NonNull ExtensionContext context) {
         EinfprogJRunit.clearContext();
-        EinfprogJRunit.setContext(new Context(pipeline.get(), collector.get(), formatter.get()));
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(out));
+
+        EinfprogJRunit.setContext(new Context(
+                pipeline.get(),
+                collector.get(),
+                formatter.get(),
+                out));
     }
 
     public static EinfprogJRunitExtension getDefault() {

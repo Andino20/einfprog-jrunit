@@ -7,16 +7,22 @@ import plus.einfprog.pipeline.intercepter.InvocationTracer;
 import plus.einfprog.pipeline.intercepter.MethodResolver;
 import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
 public record Context(InvocationPipeline pipeline,
                       InvocationEventCollector eventCollector,
-                      TraceFormatter traceFormatter) {
+                      TraceFormatter traceFormatter,
+                      ByteArrayOutputStream out) {
 
     public Context(InvocationPipeline pipeline,
                    InvocationEventCollector eventCollector,
-                   TraceFormatter traceFormatter) {
+                   TraceFormatter traceFormatter,
+                   ByteArrayOutputStream out) {
         this.eventCollector = eventCollector;
         this.traceFormatter = traceFormatter;
         this.pipeline = pipeline;
+        this.out = out;
         setupPipeline(new ProxyAutoWrapper(), new MethodResolver(), new InvocationTracer(eventCollector));
     }
 
