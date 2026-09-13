@@ -9,7 +9,7 @@ import plus.einfprog.proxy.ProxyUtil;
 public class JEP512Tests {
 
     @RegisterExtension
-    EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    static EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
     @Test
     void callAddTest_Framework() {
