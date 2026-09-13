@@ -7,4 +7,5 @@ public interface ProgramProxy {
     void main();
     void helloWorld();
     int add(int a, int b);
+    void thisThrows(Throwable t) throws Throwable;
 }

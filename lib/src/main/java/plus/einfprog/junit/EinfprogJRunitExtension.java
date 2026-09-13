@@ -10,6 +10,7 @@ import plus.einfprog.Context;
 import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.collector.LinearEventHistory;
+import plus.einfprog.log.event.ExceptionEvent;
 import plus.einfprog.log.format.JsonTraceFormatter;
 import plus.einfprog.log.format.TraceFormatter;
 import plus.einfprog.pipeline.InvocationPipeline;
@@ -55,8 +56,10 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
     }
 
     @Override
-    public void handleTestExecutionException(@NonNull ExtensionContext context, Throwable throwable) throws Throwable {
+    public void handleTestExecutionException(@NonNull ExtensionContext context, @NonNull Throwable throwable) throws Throwable {
         InvocationEventCollector eventCollector = EinfprogJRunit.getContext().eventCollector();
+        eventCollector.event(new ExceptionEvent(throwable));
+
         TraceFormatter traceFormatter = EinfprogJRunit.getContext().traceFormatter();
         System.err.println(traceFormatter.format(eventCollector.getTrace()));
         throw throwable;
