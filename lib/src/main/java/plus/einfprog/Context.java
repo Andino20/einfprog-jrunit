@@ -3,11 +3,11 @@ package plus.einfprog;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.format.TraceFormatter;
 import plus.einfprog.pipeline.InvocationPipeline;
+import plus.einfprog.pipeline.intercepter.ExceptionWrapper;
 import plus.einfprog.pipeline.intercepter.InvocationTracer;
 import plus.einfprog.pipeline.intercepter.MethodResolver;
 import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 public record Context(InvocationPipeline pipeline,
@@ -37,5 +37,6 @@ public record Context(InvocationPipeline pipeline,
         pipeline.after().addLast(wrapper);
 
         pipeline.exception().addLast(tracer);
+        pipeline.exception().addLast(new ExceptionWrapper());
     }
 }

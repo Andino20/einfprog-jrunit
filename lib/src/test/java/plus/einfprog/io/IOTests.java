@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 
 import java.lang.IO;
+import java.util.Scanner;
 
 public class IOTests {
 
@@ -30,6 +31,16 @@ public class IOTests {
 
         int x = Integer.parseInt(IO.readln());
         Assertions.assertEquals(42, x);
+    }
+
+    @Test
+    void scannerInputTest() {
+        IOAssertions.prepareInput(Input.of("Hello world!", 42));
+
+        try (var scanner = new Scanner(System.in)) {
+            Assertions.assertEquals("Hello world!", scanner.nextLine());
+            Assertions.assertEquals(42, scanner.nextInt());
+        }
     }
 
 }

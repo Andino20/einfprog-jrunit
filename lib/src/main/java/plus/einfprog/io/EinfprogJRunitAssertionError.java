@@ -12,6 +12,3 @@ public class EinfprogJRunitAssertionError extends RuntimeException {
     private final String expected;
     private final String message;
 }
-
-
-
