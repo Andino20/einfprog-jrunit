@@ -8,6 +8,7 @@ import plus.einfprog.pipeline.intercepter.ExceptionInterceptor;
 import plus.einfprog.util.PrependedList;
 
 import java.lang.invoke.WrongMethodTypeException;
+import java.util.concurrent.*;
 
 public record InvocationPipeline(Pipeline<MethodCall, BeforeInterceptor> before,
                                  Pipeline<MethodCallResult, AfterInterceptor> after,
@@ -22,8 +23,29 @@ public record InvocationPipeline(Pipeline<MethodCall, BeforeInterceptor> before,
 
     public MethodCallResult run(MethodCall call) {
         call = before().run(call);
-        Object returnValue = invoke(call);
+        Object returnValue = invokeWithTimeout(call, 1);
         return after().run(MethodCallResult.from(call, returnValue));
+    }
+
+    private Object invokeWithTimeout(MethodCall call, long seconds) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<Object> returnValue = executor.submit(() -> invoke(call));
+
+        try {
+            return returnValue.get(seconds, TimeUnit.SECONDS);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException r) {
+                throw r;
+            } else {
+                throw new RuntimeException("an unexpected error occurred", e);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("an unexpected error occurred", e);
+        } catch (TimeoutException e) {
+            throw new RuntimeTimeoutException(e);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     private Object invoke(MethodCall call) {
