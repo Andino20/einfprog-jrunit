@@ -2,13 +2,8 @@ package plus.einfprog.pipeline;
 
 public class TargetInvocationException extends RuntimeException {
 
-    private Throwable cause;
-
     public TargetInvocationException(String message, Throwable cause) {
-        super(message);
+        super(message, cause);
     }
 
-    public Throwable getCause() {
-        return cause;
-    }
 }
