@@ -1,13 +1,12 @@
 package plus.einfprog.pipeline.intercepter;
 
 import plus.einfprog.log.collector.InvocationEventCollector;
-import plus.einfprog.log.event.ExceptionEvent;
 import plus.einfprog.log.event.MethodCallEvent;
 import plus.einfprog.log.event.MethodReturnEvent;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
 
-public class InvocationTracer implements BeforeInterceptor, AfterInterceptor, ExceptionInterceptor {
+public class InvocationTracer implements BeforeInterceptor, AfterInterceptor {
 
     private final InvocationEventCollector eventCollector;
 
@@ -35,14 +34,6 @@ public class InvocationTracer implements BeforeInterceptor, AfterInterceptor, Ex
                 .returnValue(safeObjectToString(result.returnValue()))
                 .build());
         return result;
-    }
-
-    @Override
-    public Throwable intercept(Throwable throwable) {
-        eventCollector.event(ExceptionEvent.builder()
-                .exception(throwable)
-                .build());
-        return throwable;
     }
 
     private static String safeObjectToString(Object o) {

@@ -7,7 +7,7 @@ import plus.einfprog.pipeline.intercepter.BeforeInterceptor;
 import plus.einfprog.pipeline.intercepter.ExceptionInterceptor;
 import plus.einfprog.util.PrependedList;
 
-import java.util.Objects;
+import java.lang.invoke.WrongMethodTypeException;
 
 public record InvocationPipeline(Pipeline<MethodCall, BeforeInterceptor> before,
                                  Pipeline<MethodCallResult, AfterInterceptor> after,
@@ -21,14 +21,21 @@ public record InvocationPipeline(Pipeline<MethodCall, BeforeInterceptor> before,
     }
 
     public MethodCallResult run(MethodCall call) {
+        call = before().run(call);
+        Object returnValue = invoke(call);
+        return after().run(MethodCallResult.from(call, returnValue));
+    }
+
+    private Object invoke(MethodCall call) {
         try {
-            call = before().run(call);
-            Object returnValue = Objects.requireNonNull(call.methodHandle())
-                    .invokeWithArguments(call.isStatic() ? call.arguments() : new PrependedList<>(call.target(), call.arguments()));
-            return after().run(MethodCallResult.from(call, returnValue));
+            return call.methodHandle().invokeWithArguments(call.isStatic() ?
+                    call.arguments() :
+                    new PrependedList<>(call.target(), call.arguments()));
+        } catch (ClassCastException | WrongMethodTypeException e) {
+            throw new RuntimeException("an unexpected error occurred", e);
         } catch (Throwable e) {
             Throwable t = exception().run(e);
-            throw new RuntimeException("Failed to invoke method: " + t.getMessage());
+            throw new TargetInvocationException("an exception occurred while invoking a target method", t);
         }
     }
 

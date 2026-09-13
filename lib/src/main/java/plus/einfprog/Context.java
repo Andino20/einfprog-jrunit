@@ -34,7 +34,5 @@ public record Context(InvocationPipeline pipeline,
 
         pipeline.after().addLast(tracer);
         pipeline.after().addLast(wrapper);
-
-        pipeline.exception().addLast(tracer);
     }
 }
