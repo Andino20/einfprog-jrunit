@@ -14,7 +14,10 @@ import java.util.concurrent.*;
 public class TimeoutTests {
 
     @RegisterExtension
-    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault()
+            .withSettings(Settings.getDefault()
+                    .withTimeout(10)
+                    .withTimeoutUnit(TimeUnit.MILLISECONDS));
 
     @SuppressWarnings("unused")
     static class Foo {
@@ -30,7 +33,7 @@ public class TimeoutTests {
     }
 
     @Test
-    @Timeout(value = 5, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void proxyCallShouldTimeout() {
         FooProxy foo = ProxyUtil.create(FooProxy.class);
         Assertions.assertThrows(RuntimeTimeoutException.class, foo::timeout);

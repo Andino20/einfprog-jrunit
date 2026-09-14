@@ -1,5 +1,6 @@
 package plus.einfprog.pipeline;
 
+import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
 import plus.einfprog.pipeline.intercepter.AfterInterceptor;
@@ -22,17 +23,20 @@ public record InvocationPipeline(Pipeline<MethodCall, BeforeInterceptor> before,
     }
 
     public MethodCallResult run(MethodCall call) {
+        long timeout = EinfprogJRunit.getContext().settings().getTimeout();
+        TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
+
         call = before().run(call);
-        Object returnValue = invokeWithTimeout(call, 1);
+        Object returnValue = invokeWithTimeout(call, timeout, unit);
         return after().run(MethodCallResult.from(call, returnValue));
     }
 
-    private Object invokeWithTimeout(MethodCall call, long seconds) {
+    private Object invokeWithTimeout(MethodCall call, long timeout, TimeUnit unit) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Object> returnValue = executor.submit(() -> invoke(call));
 
         try {
-            return returnValue.get(seconds, TimeUnit.SECONDS);
+            return returnValue.get(timeout, unit);
         } catch (ExecutionException e) {
             if (e.getCause() instanceof RuntimeException r) {
                 throw r;

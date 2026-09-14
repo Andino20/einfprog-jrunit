@@ -12,15 +12,18 @@ import java.io.ByteArrayOutputStream;
 public record Context(InvocationPipeline pipeline,
                       InvocationEventCollector eventCollector,
                       TraceFormatter traceFormatter,
+                      Settings settings,
                       ByteArrayOutputStream out) {
 
     public Context(InvocationPipeline pipeline,
                    InvocationEventCollector eventCollector,
                    TraceFormatter traceFormatter,
+                   Settings settings,
                    ByteArrayOutputStream out) {
         this.eventCollector = eventCollector;
         this.traceFormatter = traceFormatter;
         this.pipeline = pipeline;
+        this.settings = settings;
         this.out = out;
         setupPipeline(new ProxyAutoWrapper(), new MethodResolver(), new InvocationTracer(eventCollector));
     }
