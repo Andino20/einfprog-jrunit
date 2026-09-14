@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import plus.einfprog.Context;
 import plus.einfprog.EinfprogJRunit;
+import plus.einfprog.Settings;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.collector.LinearEventHistory;
 import plus.einfprog.log.event.ExceptionEvent;
@@ -28,6 +29,8 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
     private Supplier<InvocationEventCollector> collector;
     @With
     private Supplier<TraceFormatter> formatter;
+    @With
+    private Settings settings;
 
     @Override
     public void beforeEach(@NonNull ExtensionContext context) {
@@ -40,6 +43,7 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
                 pipeline.get(),
                 collector.get(),
                 formatter.get(),
+                settings,
                 out));
     }
 
@@ -47,7 +51,8 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
         return new EinfprogJRunitExtension(
                 InvocationPipeline::empty,
                 LinearEventHistory::new,
-                JsonTraceFormatter::new);
+                JsonTraceFormatter::new,
+                Settings.getDefault());
     }
 
     @Override

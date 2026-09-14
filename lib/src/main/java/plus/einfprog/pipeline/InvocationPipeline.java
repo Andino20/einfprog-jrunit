@@ -1,5 +1,6 @@
 package plus.einfprog.pipeline;
 
+import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
 import plus.einfprog.pipeline.intercepter.AfterInterceptor;
@@ -8,6 +9,7 @@ import plus.einfprog.pipeline.intercepter.ExceptionInterceptor;
 import plus.einfprog.util.PrependedList;
 
 import java.lang.invoke.WrongMethodTypeException;
+import java.util.concurrent.*;
 
 public record InvocationPipeline(Pipeline<MethodCall, BeforeInterceptor> before,
                                  Pipeline<MethodCallResult, AfterInterceptor> after,
@@ -21,9 +23,33 @@ public record InvocationPipeline(Pipeline<MethodCall, BeforeInterceptor> before,
     }
 
     public MethodCallResult run(MethodCall call) {
+        long timeout = EinfprogJRunit.getContext().settings().getTimeout();
+        TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
+
         call = before().run(call);
-        Object returnValue = invoke(call);
+        Object returnValue = invokeWithTimeout(call, timeout, unit);
         return after().run(MethodCallResult.from(call, returnValue));
+    }
+
+    private Object invokeWithTimeout(MethodCall call, long timeout, TimeUnit unit) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<Object> returnValue = executor.submit(() -> invoke(call));
+
+        try {
+            return returnValue.get(timeout, unit);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException r) {
+                throw r;
+            } else {
+                throw new RuntimeException("an unexpected error occurred", e);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("an unexpected error occurred", e);
+        } catch (TimeoutException e) {
+            throw new RuntimeTimeoutException(e);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     private Object invoke(MethodCall call) {
