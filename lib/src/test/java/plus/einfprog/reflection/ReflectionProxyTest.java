@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
+import plus.einfprog.log.collector.LinearEventHistory;
+import plus.einfprog.log.format.JsonTraceFormatter;
 import plus.einfprog.proxy.Proxy;
 import plus.einfprog.proxy.ProxyUtil;
 
@@ -12,7 +14,9 @@ import static plus.einfprog.reflection.Reflected.on;
 class ReflectionProxyTest {
 
     @RegisterExtension
-    private static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    private static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault()
+            .withFormatter(JsonTraceFormatter::new)
+            .withCollector(LinearEventHistory::new);
 
     private static final String FOO_CLASS_NAME = "plus.einfprog.reflection.ReflectionProxyTest$Foo";
 

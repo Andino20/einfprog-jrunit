@@ -1,6 +1,8 @@
 package plus.einfprog;
 
-
+/**
+ * A globally accessible class for storing the context of the current environment.
+ */
 public class EinfprogJRunit {
 
     private static Context context;

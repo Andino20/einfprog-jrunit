@@ -6,6 +6,9 @@ import lombok.With;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Global library configuration settings.
+ */
 @Builder
 @Data
 @With

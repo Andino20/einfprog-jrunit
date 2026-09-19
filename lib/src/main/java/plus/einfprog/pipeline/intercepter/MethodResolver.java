@@ -1,6 +1,6 @@
 package plus.einfprog.pipeline.intercepter;
 
-import plus.einfprog.ReflectiveException;
+import plus.einfprog.pipeline.ReflectiveException;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.reflection.Any;
 
@@ -12,7 +12,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class MethodResolver implements BeforeInterceptor {
+/**
+ * Tries to resolve the target method based on a method descriptor.
+ *
+ * <p>
+ *     Iterates over all methods of the target class to check if
+ *     their signatures match a list of argument types and return value.
+ *     If no matching method is found, it repeats by looking at the target superclass
+ *     and so on.
+ *     An {@link ReflectiveException} is thrown if no matching method can be found.
+ *     If multiple candidates are found, the method with the most specific return type is chosen.
+ * </p>
+ *
+ * <p>
+ * A parameter type matches if it is the exact same type, if the method parameter type is assignable
+ * from the provided type, or if the provided type is the {@link Any} wildcard..
+ * </p>
+ */
+public class MethodResolver implements BeforeHook {
 
     private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
 

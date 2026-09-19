@@ -2,7 +2,14 @@ package plus.einfprog.io;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Represents structured console input for testing purposes.
+ * <p>
+ * This class collects a sequence of input values in the form of {@code Object}s
+ * and formats them into a single newline-separated {@link String} via {@link #toString()},
+ * mimicking multi-line user input typed into standard input ({@code System.in}).
+ * </p>
+ */
 public class Input {
     private final List<Object> inputs;
 

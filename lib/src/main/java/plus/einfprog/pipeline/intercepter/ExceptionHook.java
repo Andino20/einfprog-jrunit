@@ -1,7 +1,7 @@
 package plus.einfprog.pipeline.intercepter;
 
 @FunctionalInterface
-public interface ExceptionInterceptor {
+public interface ExceptionHook {
 
     Throwable intercept(Throwable throwable);
 

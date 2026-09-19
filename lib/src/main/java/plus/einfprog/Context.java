@@ -9,6 +9,20 @@ import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
 
 import java.io.ByteArrayOutputStream;
 
+/**
+ * Shared runtime context containing core instances and configuration used across the testing library.
+ * <p>
+ * This record serves as a central container holding the execution {@link InvocationPipeline}, logging
+ * utilities, global {@link Settings}, and the captured standard output stream. Upon initialization, it automatically
+ * configures the default interceptor pipeline with proxy wrapping, method resolution, and invocation tracing.
+ * </p>
+ *
+ * @param pipeline the invocation pipeline managing method execution hooks
+ * @param eventCollector the collector responsible for recording invocation events
+ * @param traceFormatter the formatter used to render execution traces
+ * @param settings the configuration settings governing framework behavior
+ * @param out the output stream capturing standard output generated during test execution
+ */
 public record Context(InvocationPipeline pipeline,
                       InvocationEventCollector eventCollector,
                       TraceFormatter traceFormatter,

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.proxy.ProxyUtil;
 
-public class JEP512Tests {
+public class CompactSourceFilesTests {
 
     @RegisterExtension
     static EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();

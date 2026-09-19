@@ -1,7 +1,7 @@
 package plus.einfprog.reflection;
 
 import plus.einfprog.EinfprogJRunit;
-import plus.einfprog.ReflectiveException;
+import plus.einfprog.pipeline.ReflectiveException;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodDescriptor;
@@ -13,6 +13,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Fluent reflection wrapper for executing methods dynamically through the framework's invocation pipeline.
+ * <p>
+ * This class abstracts reflective method execution on both static classes and object instances,
+ * automatically routing calls through the {@link InvocationPipeline} for interception, proxying, and tracing.
+ * Return values are wrapped in a new {@code Reflected} instance, enabling fluent method chaining.
+ * </p>
+ *
+ * @see #on(String)
+ * @see #on(Object)
+ */
 public class Reflected {
 
     private final Class<?> type;

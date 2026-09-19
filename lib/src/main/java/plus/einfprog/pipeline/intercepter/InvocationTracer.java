@@ -6,7 +6,11 @@ import plus.einfprog.log.event.MethodReturnEvent;
 import plus.einfprog.pipeline.dto.MethodCall;
 import plus.einfprog.pipeline.dto.MethodCallResult;
 
-public class InvocationTracer implements BeforeInterceptor, AfterInterceptor {
+/**
+ * Converts {@link MethodCall} to {@link MethodCallEvent} and {@link MethodCallResult} to {@link MethodReturnEvent}
+ * and passes them to the {@link InvocationEventCollector}.
+ */
+public class InvocationTracer implements BeforeHook, AfterHook {
 
     private final InvocationEventCollector eventCollector;
 

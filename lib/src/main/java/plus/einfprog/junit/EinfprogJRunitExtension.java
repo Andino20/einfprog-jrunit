@@ -20,6 +20,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.function.Supplier;
 
+/**
+ * This extension serves as the integration point between einfprog-jrunit and JUnit.
+ * It hooks into the JUnit test lifecycle and initializes the einfprog-jrunit context.
+ */
 @AllArgsConstructor
 public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseable, TestExecutionExceptionHandler {
 
@@ -68,6 +72,10 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
         TraceFormatter traceFormatter = EinfprogJRunit.getContext().traceFormatter();
         System.err.println(traceFormatter.format(eventCollector.getTrace()));
         throw throwable;
+    }
+
+    public Context getContext() {
+        return EinfprogJRunit.getContext();
     }
 
 }

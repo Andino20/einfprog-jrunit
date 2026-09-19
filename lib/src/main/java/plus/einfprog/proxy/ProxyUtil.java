@@ -1,6 +1,6 @@
 package plus.einfprog.proxy;
 
-import plus.einfprog.ReflectiveException;
+import plus.einfprog.pipeline.ReflectiveException;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
@@ -10,6 +10,9 @@ import java.util.Optional;
 
 import static org.joor.Reflect.*;
 
+/**
+ * Utility class for working with proxies.
+ */
 public interface ProxyUtil {
 
     static <T> T create(Class<T> proxyClass, Object... args) {

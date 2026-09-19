@@ -5,7 +5,9 @@ import plus.einfprog.EinfprogJRunit;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-
+/**
+ * Utility class providing assertion and setup methods for testing console input/output (I/O).
+ */
 public final class IOAssertions {
 
     public static void prepareInput(Input input) {

@@ -3,7 +3,7 @@ package plus.einfprog.exception;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import plus.einfprog.ReflectiveException;
+import plus.einfprog.pipeline.ReflectiveException;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.pipeline.TargetInvocationException;
 import plus.einfprog.proxy.Proxy;
