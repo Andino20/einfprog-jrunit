@@ -14,14 +14,14 @@ public class IOTests {
     @Test
     void assertConsoleOutputTest() {
         IO.println("Foo");
-        IOAssertions.assertOutput("Foo\n");
+        IOAssertions.assertOutput("Foo" + System.lineSeparator());
     }
 
     @Test
     @Tag("failing")
     void feedbackConsoleOutputTest() {
         IO.println("Foo");
-        IOAssertions.assertOutput("Bar\n");
+        IOAssertions.assertOutput("Bar" + System.lineSeparator());
     }
 
 }

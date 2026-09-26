@@ -16,10 +16,10 @@ public class IOTests {
     @Test
     void outputTest() {
         IO.println("Hello World!");
-        IOAssertions.assertOutput("Hello World!\n");
+        IOAssertions.assertOutput("Hello World!" + System.lineSeparator());
 
         IO.println("My first Java program");
-        IOAssertions.assertOutput("My first Java program\n");
+        IOAssertions.assertOutput("My first Java program" + System.lineSeparator());
     }
 
     @Test
