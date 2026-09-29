@@ -74,6 +74,20 @@ public class Reflected {
         return new Reflected(pipeline.run(invocation).returnValue());
     }
 
+    public Reflected create(Object... args) {
+        InvocationPipeline pipeline = EinfprogJRunit.getContext().pipeline();
+        Invocation invocation = Invocation.builder()
+                .id(UUID.randomUUID())
+                .name("<init>")
+                .parameterTypes(List.of(types(args)))
+                .returnType(Any.class)
+                .arguments(List.of(args))
+                .targetClass(type)
+                .target(null)
+                .build();
+        return new Reflected(pipeline.run(invocation).returnValue());
+    }
+
     public <T> T get() {
         return (T) target;
     }

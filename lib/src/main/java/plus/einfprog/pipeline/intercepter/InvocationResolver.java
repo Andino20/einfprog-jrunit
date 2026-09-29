@@ -4,6 +4,8 @@ import plus.einfprog.pipeline.ReflectiveException;
 import plus.einfprog.pipeline.dto.Invocation;
 import plus.einfprog.reflection.Any;
 
+import java.lang.reflect.Executable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +29,7 @@ import java.util.Optional;
  * from the provided type, or if the provided type is the {@link Any} wildcard.
  * </p>
  */
-public class MethodResolver implements BeforeHook {
+public class InvocationResolver implements BeforeHook {
 
     @Override
     public Invocation intercept(Invocation invocation) {
@@ -36,12 +38,38 @@ public class MethodResolver implements BeforeHook {
         Class<?>[] types = invocation.parameterTypes().toArray(Class<?>[]::new);
         Class<?> returnType = invocation.returnType();
 
-        // if / switch on method or constructor
-        Method m = findMatchingMethod(targetClass, name, returnType, types)
-                .orElseThrow(() -> new ReflectiveException(String.format("No method %s on %s with parameters %s and return type %s",
-                        name, targetClass.getSimpleName(), Arrays.toString(types), returnType)));
-        m.setAccessible(true);
-        return invocation.withExecutable(m);
+        Executable exec;
+        if (name.equals("<init>")) {
+            exec = findMatchingConstructor(targetClass, types)
+                    .orElseThrow(() -> new ReflectiveException(String.format("Cannot find matching constructor for %s with parameters %s",
+                            targetClass.getSimpleName(), Arrays.toString(types))));
+        } else {
+            exec = findMatchingMethod(targetClass, name, returnType, types)
+                    .orElseThrow(() -> new ReflectiveException(String.format("No method %s on %s with parameters %s and return type %s",
+                            name, targetClass.getSimpleName(), Arrays.toString(types), returnType)));
+        }
+        exec.setAccessible(true);
+        return invocation.withExecutable(exec);
+    }
+
+    private Optional<Constructor<?>> findMatchingConstructor(Class<?> targetClass, Class<?>[] types) {
+        try {
+            return Optional.of(targetClass.getConstructor(types));
+        } catch (NoSuchMethodException e) {
+            Class<?> t = targetClass;
+            while (t != null) {
+                Optional<Constructor<?>> constructor = Arrays.stream(t.getDeclaredConstructors())
+                        .filter(c -> match(c.getParameterTypes(), types))
+                        .findAny();
+
+                if (constructor.isPresent()) {
+                    return constructor;
+                }
+
+                t = t.getSuperclass();
+            }
+        }
+        return Optional.empty();
     }
 
     private Optional<Method> findMatchingMethod(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {

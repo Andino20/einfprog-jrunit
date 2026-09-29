@@ -1,14 +1,11 @@
 package plus.einfprog.proxy;
 
 import plus.einfprog.pipeline.ReflectiveException;
+import plus.einfprog.reflection.Reflected;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
-
-import static org.joor.Reflect.*;
+import java.util.*;
 
 /**
  * Utility class for working with proxies.
@@ -16,10 +13,8 @@ import static org.joor.Reflect.*;
 public interface ProxyUtil {
 
     static <T> T create(Class<T> proxyClass, Object... args) {
-        String name = Objects.requireNonNull(proxyClass.getDeclaredAnnotation(Proxy.class)).value();
-        Object[] arguments = Arrays.stream(args).map(ProxyUtil::unwrap).toArray(Object[]::new);
-
-        Object subject = args.length > 0 ? onClass(name).create(arguments).get() : onClass(name).create().get();
+        String targetClassName = Objects.requireNonNull(proxyClass.getDeclaredAnnotation(Proxy.class)).value();
+        Object subject = Reflected.on(targetClassName).create(args).get();
         return wrap(subject, proxyClass);
     }
 
