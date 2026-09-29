@@ -1,11 +1,9 @@
 package plus.einfprog.pipeline.intercepter;
 
 import plus.einfprog.pipeline.ReflectiveException;
-import plus.einfprog.pipeline.dto.MethodCall;
+import plus.einfprog.pipeline.dto.Invocation;
 import plus.einfprog.reflection.Any;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Tries to resolve the target method based on a method descriptor.
+ * Tries to resolve the target method based on the requested name, parameter types and return type.
  *
  * <p>
  *     Iterates over all methods of the target class to check if
@@ -31,26 +29,18 @@ import java.util.Optional;
  */
 public class MethodResolver implements BeforeHook {
 
-    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
-
     @Override
-    public MethodCall intercept(MethodCall call) {
-        Class<?> targetClass = call.targetClass();
-        String name = call.methodDescriptor().methodName();
-        Class<?>[] types = call.methodDescriptor().type().parameterArray();
-        Class<?> returnType = call.methodDescriptor().type().returnType();
+    public Invocation intercept(Invocation invocation) {
+        Class<?> targetClass = invocation.targetClass();
+        String name = invocation.name();
+        Class<?>[] types = invocation.parameterTypes().toArray(Class<?>[]::new);
+        Class<?> returnType = invocation.returnType();
 
         Method m = findMatchingMethod(targetClass, name, returnType, types)
                 .orElseThrow(() -> new ReflectiveException(String.format("No method %s on %s with parameters %s and return type %s",
                         name, targetClass.getSimpleName(), Arrays.toString(types), returnType)));
         m.setAccessible(true);
-
-        try {
-            MethodHandle handle = lookup.unreflect(m);
-            return call.withMethodHandle(handle);
-        } catch (IllegalAccessException e) {
-            throw new ReflectiveException(e);
-        }
+        return invocation.withExecutable(m);
     }
 
     private Optional<Method> findMatchingMethod(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {

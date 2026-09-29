@@ -1,10 +1,10 @@
 package plus.einfprog.pipeline.intercepter;
 
-import plus.einfprog.pipeline.dto.MethodCall;
+import plus.einfprog.pipeline.dto.Invocation;
 
 @FunctionalInterface
 public interface BeforeHook {
 
-    MethodCall intercept(MethodCall call);
+    Invocation intercept(Invocation invocation);
 
 }

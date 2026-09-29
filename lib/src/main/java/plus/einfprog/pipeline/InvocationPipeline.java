@@ -1,19 +1,20 @@
 package plus.einfprog.pipeline;
 
 import plus.einfprog.EinfprogJRunit;
-import plus.einfprog.pipeline.dto.MethodCall;
-import plus.einfprog.pipeline.dto.MethodCallResult;
+import plus.einfprog.pipeline.dto.Invocation;
+import plus.einfprog.pipeline.dto.InvocationResult;
 import plus.einfprog.pipeline.intercepter.AfterHook;
 import plus.einfprog.pipeline.intercepter.BeforeHook;
 import plus.einfprog.pipeline.intercepter.ExceptionHook;
-import plus.einfprog.util.PrependedList;
 
-import java.lang.invoke.WrongMethodTypeException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.concurrent.*;
 
 /**
  * <p>This class represents a collection of {@link Pipeline} objects
- * that are executed each time a method should be invoked on a target class or object,
+ * that are executed each time a method or constructor should be invoked on a target class or object,
  * either via proxy objects or {@link plus.einfprog.reflection.Reflected}.
  * These pipelines contain hooks which can be configured to intercept and inspect method calls, exceptions, and return values.
  * </p>
@@ -45,8 +46,8 @@ import java.util.concurrent.*;
  * @see TargetInvocationException
  * @see RuntimeTimeoutException
  */
-public record InvocationPipeline(Pipeline<MethodCall, BeforeHook> before,
-                                 Pipeline<MethodCallResult, AfterHook> after,
+public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
+                                 Pipeline<InvocationResult, AfterHook> after,
                                  Pipeline<Throwable, ExceptionHook> exception) {
 
     /**
@@ -60,18 +61,18 @@ public record InvocationPipeline(Pipeline<MethodCall, BeforeHook> before,
                 new Pipeline<>(exceptionHook -> exceptionHook::intercept));
     }
 
-    public MethodCallResult run(MethodCall call) {
+    public InvocationResult run(Invocation invocation) {
         long timeout = EinfprogJRunit.getContext().settings().getTimeout();
         TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
 
-        call = before().run(call);
-        Object returnValue = invokeWithTimeout(call, timeout, unit);
-        return after().run(MethodCallResult.from(call, returnValue));
+        invocation = before().run(invocation);
+        Object returnValue = invokeWithTimeout(invocation, timeout, unit);
+        return after().run(InvocationResult.from(invocation, returnValue));
     }
 
-    private Object invokeWithTimeout(MethodCall call, long timeout, TimeUnit unit) {
+    private Object invokeWithTimeout(Invocation invocation, long timeout, TimeUnit unit) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Object> returnValue = executor.submit(() -> invoke(call));
+        Future<Object> returnValue = executor.submit(() -> invoke(invocation));
 
         try {
             return returnValue.get(timeout, unit);
@@ -90,16 +91,19 @@ public record InvocationPipeline(Pipeline<MethodCall, BeforeHook> before,
         }
     }
 
-    private Object invoke(MethodCall call) {
+    private Object invoke(Invocation invocation) {
+        Object[] args = invocation.arguments().toArray();
         try {
-            return call.methodHandle().invokeWithArguments(call.isStatic() ?
-                    call.arguments() :
-                    new PrependedList<>(call.target(), call.arguments()));
-        } catch (ClassCastException | WrongMethodTypeException e) {
-            throw new RuntimeException("an unexpected error occurred", e);
-        } catch (Throwable e) {
-            Throwable t = exception().run(e);
+            return switch (invocation.executable()) {
+                case Method m -> m.invoke(invocation.target(), args);
+                case Constructor<?> c -> c.newInstance(args);
+                case null, default -> throw new ReflectiveException("executable of invocation was not resolved");
+            };
+        } catch (InvocationTargetException e) {
+            Throwable t = exception().run(e.getCause());
             throw new TargetInvocationException("an exception occurred while invoking a target method", t);
+        } catch (ReflectiveOperationException | IllegalArgumentException e) {
+            throw new RuntimeException("an unexpected error occurred", e);
         }
     }
 

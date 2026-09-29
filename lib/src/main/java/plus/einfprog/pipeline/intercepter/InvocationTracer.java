@@ -3,11 +3,11 @@ package plus.einfprog.pipeline.intercepter;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.event.MethodCallEvent;
 import plus.einfprog.log.event.MethodReturnEvent;
-import plus.einfprog.pipeline.dto.MethodCall;
-import plus.einfprog.pipeline.dto.MethodCallResult;
+import plus.einfprog.pipeline.dto.Invocation;
+import plus.einfprog.pipeline.dto.InvocationResult;
 
 /**
- * Converts {@link MethodCall} to {@link MethodCallEvent} and {@link MethodCallResult} to {@link MethodReturnEvent}
+ * Converts {@link Invocation} to {@link MethodCallEvent} and {@link InvocationResult} to {@link MethodReturnEvent}
  * and passes them to the {@link InvocationEventCollector}.
  */
 public class InvocationTracer implements BeforeHook, AfterHook {
@@ -19,20 +19,20 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     }
 
     @Override
-    public MethodCall intercept(MethodCall call) {
+    public Invocation intercept(Invocation invocation) {
         eventCollector.event(MethodCallEvent.builder()
-                .id(call.id().toString())
-                .method(call.methodDescriptor().methodName())
-                .types(call.methodDescriptor().type().parameterList().stream().map(Class::getSimpleName).toList())
-                .arguments(call.arguments().stream().map(InvocationTracer::safeObjectToString).toList())
-                .clazz(call.targetClass())
-                .target(safeObjectToString(call.target()))
+                .id(invocation.id().toString())
+                .method(invocation.name())
+                .types(invocation.parameterTypes().stream().map(Class::getSimpleName).toList())
+                .arguments(invocation.arguments().stream().map(InvocationTracer::safeObjectToString).toList())
+                .clazz(invocation.targetClass())
+                .target(safeObjectToString(invocation.target()))
                 .build());
-        return call;
+        return invocation;
     }
 
     @Override
-    public MethodCallResult intercept(MethodCallResult result) {
+    public InvocationResult intercept(InvocationResult result) {
         eventCollector.event(MethodReturnEvent.builder()
                 .id(result.id().toString())
                 .returnValue(safeObjectToString(result.returnValue()))
