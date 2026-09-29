@@ -24,7 +24,7 @@ import java.util.Optional;
  *
  * <p>
  * A parameter type matches if it is the exact same type, if the method parameter type is assignable
- * from the provided type, or if the provided type is the {@link Any} wildcard..
+ * from the provided type, or if the provided type is the {@link Any} wildcard.
  * </p>
  */
 public class MethodResolver implements BeforeHook {
@@ -36,6 +36,7 @@ public class MethodResolver implements BeforeHook {
         Class<?>[] types = invocation.parameterTypes().toArray(Class<?>[]::new);
         Class<?> returnType = invocation.returnType();
 
+        // if / switch on method or constructor
         Method m = findMatchingMethod(targetClass, name, returnType, types)
                 .orElseThrow(() -> new ReflectiveException(String.format("No method %s on %s with parameters %s and return type %s",
                         name, targetClass.getSimpleName(), Arrays.toString(types), returnType)));
