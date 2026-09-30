@@ -1,6 +1,6 @@
 package plus.einfprog.proxy;
 
-import plus.einfprog.pipeline.ReflectiveException;
+import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
 import plus.einfprog.reflection.Reflected;
 
 import java.lang.reflect.Array;
@@ -262,7 +262,7 @@ public interface ProxyUtil {
      * @param subject    the object to wrap; may be {@code null}
      * @param proxyClass the proxy class to wrap the subject in; may be {@code null}
      * @return {@code true} if the subject can be wrapped in the given proxy class
-     * @throws ReflectiveException if the proxy's target class could not be resolved
+     * @throws RuntimeReflectiveOperationException if the proxy's target class could not be resolved
      */
     static boolean canWrap(Object subject, Class<?> proxyClass) {
         if (!isProxyClass(proxyClass))
@@ -271,7 +271,7 @@ public interface ProxyUtil {
         try {
             Class<?> targetClass = getTargetClass(proxyClass);
             return subject == null || targetClass.isInstance(subject);
-        } catch (ReflectiveException e) {
+        } catch (RuntimeReflectiveOperationException e) {
             throw e;
         } catch (Exception e) {
             return false;
@@ -289,7 +289,7 @@ public interface ProxyUtil {
      * @param subjectClass the class to check assignability for; may be {@code null}
      * @param proxyClass   the proxy class to wrap instances in; may be {@code null}
      * @return {@code true} if instances of {@code subjectClass} can be wrapped in the given proxy class
-     * @throws ReflectiveException if the proxy's target class could not be resolved
+     * @throws RuntimeReflectiveOperationException if the proxy's target class could not be resolved
      */
     static boolean canWrap(Class<?> subjectClass, Class<?> proxyClass) {
         if (subjectClass == null || !isProxyClass(proxyClass))
@@ -298,7 +298,7 @@ public interface ProxyUtil {
         try {
             Class<?> targetClass = getTargetClass(proxyClass);
             return targetClass.isAssignableFrom(subjectClass);
-        } catch (ReflectiveException e) {
+        } catch (RuntimeReflectiveOperationException e) {
             throw e;
         } catch (Exception e) {
             return false;
@@ -329,9 +329,9 @@ public interface ProxyUtil {
      * @param proxyClass the proxy class to resolve the target class for; must not be {@code null}
      * @return the resolved target class
      * @throws IllegalArgumentException if {@code proxyClass} is not a proxy class
-     * @throws ReflectiveException      if the target class could not be found on the classpath
+     * @throws RuntimeReflectiveOperationException      if the target class could not be found on the classpath
      */
-    static Class<?> getTargetClass(Class<?> proxyClass) throws ReflectiveException {
+    static Class<?> getTargetClass(Class<?> proxyClass) throws RuntimeReflectiveOperationException {
         try {
             Proxy annotation = proxyClass.getDeclaredAnnotation(Proxy.class);
             if (annotation != null) {
@@ -347,7 +347,7 @@ public interface ProxyUtil {
                 throw new IllegalArgumentException("Class is not a proxy.");
             }
         } catch (ClassNotFoundException e) {
-            throw new ReflectiveException(e);
+            throw new RuntimeReflectiveOperationException(e);
         }
     }
 

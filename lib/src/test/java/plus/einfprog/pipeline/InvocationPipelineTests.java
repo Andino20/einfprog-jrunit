@@ -63,7 +63,7 @@ class InvocationPipelineTests {
                 .target(new Foo("foo"))
                 .build();
 
-        Assertions.assertThrows(ReflectiveException.class, () -> InvocationPipeline.empty().run(invocation));
+        Assertions.assertThrows(RuntimeReflectiveOperationException.class, () -> InvocationPipeline.empty().run(invocation));
     }
 
 }

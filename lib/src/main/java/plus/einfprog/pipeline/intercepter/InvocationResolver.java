@@ -1,6 +1,6 @@
 package plus.einfprog.pipeline.intercepter;
 
-import plus.einfprog.pipeline.ReflectiveException;
+import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
 import plus.einfprog.pipeline.dto.Invocation;
 import plus.einfprog.reflection.Any;
 
@@ -20,7 +20,7 @@ import java.util.Optional;
  *     their signatures match a list of argument types and return value.
  *     If no match is found, it repeats by looking at the target superclass
  *     and so on.
- *     An {@link ReflectiveException} is thrown if no match can be found.
+ *     An {@link RuntimeReflectiveOperationException} is thrown if no match can be found.
  *     If multiple candidates are found in the case of a method,
  *     the one with the most specific return type is chosen.
  * </p>
@@ -46,11 +46,11 @@ public class InvocationResolver implements BeforeHook {
         Executable exec;
         if (name.equals("<init>")) {
             exec = findMatchingConstructor(targetClass, types)
-                    .orElseThrow(() -> new ReflectiveException(String.format("Cannot find matching constructor for %s with parameters %s",
+                    .orElseThrow(() -> new RuntimeReflectiveOperationException(String.format("Cannot find matching constructor for %s with parameters %s",
                             targetClass.getSimpleName(), Arrays.toString(types))));
         } else {
             exec = findMatchingMethod(targetClass, name, returnType, types)
-                    .orElseThrow(() -> new ReflectiveException(String.format("No method %s on %s with parameters %s and return type %s",
+                    .orElseThrow(() -> new RuntimeReflectiveOperationException(String.format("No method %s on %s with parameters %s and return type %s",
                             name, targetClass.getSimpleName(), Arrays.toString(types), returnType)));
         }
         exec.setAccessible(true);
