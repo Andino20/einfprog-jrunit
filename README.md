@@ -34,7 +34,7 @@ dependencies {
 
 ## Usage
 
-Every test class must register the `EinfprogJRunitExtension` extension::
+Every test class must register the `EinfprogJRunitExtension` extension:
 
 ```java
 @RegisterExtension
