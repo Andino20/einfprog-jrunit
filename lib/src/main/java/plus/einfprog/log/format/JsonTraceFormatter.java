@@ -1,9 +1,6 @@
 package plus.einfprog.log.format;
 
-import plus.einfprog.log.event.ExceptionEvent;
-import plus.einfprog.log.event.InvocationEvent;
-import plus.einfprog.log.event.MethodCallEvent;
-import plus.einfprog.log.event.MethodReturnEvent;
+import plus.einfprog.log.event.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,22 +13,16 @@ public class JsonTraceFormatter implements TraceFormatter {
     }
 
     private static String eventToJson(InvocationEvent event) {
-        if (event instanceof MethodCallEvent callEvent) {
-            return callEventToJson(callEvent);
-        } else if (event instanceof MethodReturnEvent returnEvent) {
-            return returnEventToJson(returnEvent);
-        } else if (event instanceof ExceptionEvent exceptionEvent) {
-            return exceptionEventToJson(exceptionEvent);
-        }
-
-        throw new IllegalArgumentException("Unknown event type: " + event.getClass().getName());
+        return switch (event) {
+            case MethodCallEvent e -> methodCallEventToJson(e);
+            case ConstructorCallEvent e -> constructorCallEventToJson(e);
+            case InvocationReturnEvent e -> returnEventToJson(e);
+            case ExceptionEvent e -> exceptionEventToJson(e);
+            case null -> "null";
+        };
     }
 
-    private static String callEventToJson(MethodCallEvent event) {
-        if (event == null) {
-            return "null";
-        }
-
+    private static String methodCallEventToJson(MethodCallEvent event) {
         String typesJson = formatList(event.types());
         String argumentsJson = formatList(event.arguments());
 
@@ -39,15 +30,15 @@ public class JsonTraceFormatter implements TraceFormatter {
         String targetStr = event.target() != null ? event.target().toString() : null;
 
         return """
-        {
-          "id": %s,
-          "method": %s,
-          "types": %s,
-          "arguments": %s,
-          "class": %s,
-          "target": %s
-        }
-        """.stripIndent().formatted(
+                {
+                  "id": %s,
+                  "method": %s,
+                  "types": %s,
+                  "arguments": %s,
+                  "class": %s,
+                  "target": %s
+                }
+                """.stripIndent().formatted(
                 quote(event.id()),
                 quote(event.method()),
                 typesJson,
@@ -57,27 +48,40 @@ public class JsonTraceFormatter implements TraceFormatter {
         );
     }
 
-    private static String returnEventToJson(MethodReturnEvent event) {
-        if (event == null) {
-            return "null";
-        }
+    private static String constructorCallEventToJson(ConstructorCallEvent event) {
+        String typesJson = formatList(event.types().stream().map(Class::getSimpleName).toList());
+        String argumentsJson = formatList(event.arguments());
 
+        String className = event.clazz() != null ? event.clazz().getName() : null;
         return """
-        {
-          "id": %s,
-          "returnValue": %s
-        }
-        """.stripIndent().formatted(
+                {
+                  "id": %s,
+                  "constructor": %s,
+                  "types": %s,
+                  "arguments": %s,
+                  "class": %s
+                }""".stripIndent().formatted(
+                quote(event.id()),
+                quote("yes"),
+                typesJson,
+                argumentsJson,
+                quote(className)
+        );
+    }
+
+    private static String returnEventToJson(InvocationReturnEvent event) {
+        return """
+                {
+                  "id": %s,
+                  "returnValue": %s
+                }
+                """.stripIndent().formatted(
                 quote(event.id()),
                 quote(event.returnValue())
         );
     }
 
     private static String exceptionEventToJson(ExceptionEvent event) {
-        if (event == null) {
-            return "null";
-        }
-
         Throwable ex = event.exception();
 
         String exceptionClass = ex != null ? ex.getClass().getName() : null;
@@ -90,12 +94,12 @@ public class JsonTraceFormatter implements TraceFormatter {
         }
 
         return """
-        {
-          "exception": %s,
-          "message": %s,
-          "location": %s
-        }
-        """.stripIndent().formatted(
+                {
+                  "exception": %s,
+                  "message": %s,
+                  "location": %s
+                }
+                """.stripIndent().formatted(
                 quote(exceptionClass),
                 quote(exceptionMessage),
                 quote(location)

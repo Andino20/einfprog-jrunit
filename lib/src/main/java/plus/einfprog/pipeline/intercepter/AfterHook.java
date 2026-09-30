@@ -1,10 +1,10 @@
 package plus.einfprog.pipeline.intercepter;
 
-import plus.einfprog.pipeline.dto.MethodCallResult;
+import plus.einfprog.pipeline.dto.InvocationResult;
 
 @FunctionalInterface
 public interface AfterHook {
 
-    MethodCallResult intercept(MethodCallResult result);
+    InvocationResult intercept(InvocationResult result);
 
 }

@@ -1,13 +1,11 @@
 package plus.einfprog.reflection;
 
 import plus.einfprog.EinfprogJRunit;
-import plus.einfprog.pipeline.ReflectiveException;
+import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
 import plus.einfprog.pipeline.InvocationPipeline;
-import plus.einfprog.pipeline.dto.MethodCall;
-import plus.einfprog.pipeline.dto.MethodDescriptor;
+import plus.einfprog.pipeline.dto.Invocation;
 import plus.einfprog.proxy.ProxyUtil;
 
-import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -30,11 +28,11 @@ public class Reflected {
     private final Object target;
     private final boolean isStatic;
 
-    private Reflected(String className) throws ReflectiveException {
+    private Reflected(String className) throws RuntimeReflectiveOperationException {
         try {
             this.type = Class.forName(className);
         } catch (ClassNotFoundException e) {
-            throw new ReflectiveException(e);
+            throw new RuntimeReflectiveOperationException(e);
         }
         this.target = null;
         this.isStatic = true;
@@ -46,7 +44,7 @@ public class Reflected {
         this.isStatic = false;
     }
 
-    public static Reflected on(String className) throws ReflectiveException {
+    public static Reflected on(String className) throws RuntimeReflectiveOperationException {
         return new Reflected(className);
     }
 
@@ -64,18 +62,30 @@ public class Reflected {
             throw new IllegalArgumentException("Types cannot be null");
 
         InvocationPipeline pipeline = EinfprogJRunit.getContext().pipeline();
-        MethodCall mc = pipeline.before().run(MethodCall.builder()
+        Invocation invocation = Invocation.builder()
                 .id(UUID.randomUUID())
-                .methodDescriptor(MethodDescriptor.builder()
-                        .methodName(method)
-                        .type(MethodType.methodType(Any.class, types))
-                        .build())
+                .name(method)
+                .parameterTypes(List.of(types))
+                .returnType(Any.class)
                 .arguments(List.of(args))
                 .targetClass(type)
                 .target(target)
-                .isStatic(isStatic)
-                .build());
-        return new Reflected(pipeline.run(mc).returnValue());
+                .build();
+        return new Reflected(pipeline.run(invocation).returnValue());
+    }
+
+    public Reflected create(Object... args) {
+        InvocationPipeline pipeline = EinfprogJRunit.getContext().pipeline();
+        Invocation invocation = Invocation.builder()
+                .id(UUID.randomUUID())
+                .name("<init>")
+                .parameterTypes(List.of(types(args)))
+                .returnType(Any.class)
+                .arguments(List.of(args))
+                .targetClass(type)
+                .target(null)
+                .build();
+        return new Reflected(pipeline.run(invocation).returnValue());
     }
 
     public <T> T get() {

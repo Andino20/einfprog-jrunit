@@ -1,11 +1,9 @@
 package plus.einfprog.pipeline.intercepter;
 
-import plus.einfprog.pipeline.dto.MethodCall;
-import plus.einfprog.pipeline.dto.MethodCallResult;
-import plus.einfprog.pipeline.dto.MethodDescriptor;
+import plus.einfprog.pipeline.dto.Invocation;
+import plus.einfprog.pipeline.dto.InvocationResult;
 import plus.einfprog.proxy.ProxyUtil;
 
-import java.lang.invoke.MethodType;
 import java.util.*;
 
 /**
@@ -25,22 +23,22 @@ public class ProxyAutoWrapper implements BeforeHook, AfterHook {
     private final Map<UUID, Class<?>> originalReturnTypes = new HashMap<>();
 
     @Override
-    public MethodCall intercept(MethodCall call) {
-        String name = call.methodDescriptor().methodName();
-        Class<?>[] paramTypes = unwrapClasses(call.methodDescriptor().type().parameterArray());
-        Class<?> returnType = ProxyUtil.unwrapClass(call.methodDescriptor().type().returnType());
-        Object[] args = unwrapInstances(call.arguments().toArray());
+    public Invocation intercept(Invocation invocation) {
+        List<Class<?>> paramTypes = invocation.parameterTypes().stream()
+                .<Class<?>>map(ProxyUtil::unwrapClass)
+                .toList();
+        Class<?> returnType = ProxyUtil.unwrapClass(invocation.returnType());
+        Object[] args = unwrapInstances(invocation.arguments().toArray());
 
-        originalReturnTypes.put(call.id(), call.methodDescriptor().type().returnType());
-        return call.withMethodDescriptor(MethodDescriptor.builder()
-                        .methodName(name)
-                        .type(MethodType.methodType(returnType, paramTypes))
-                        .build())
+        originalReturnTypes.put(invocation.id(), invocation.returnType());
+        return invocation
+                .withParameterTypes(paramTypes)
+                .withReturnType(returnType)
                 .withArguments(List.of(args));
     }
 
     @Override
-    public MethodCallResult intercept(MethodCallResult result) {
+    public InvocationResult intercept(InvocationResult result) {
         Class<?> expectedReturnType = originalReturnTypes.remove(result.id());
         Class<?> baseType = expectedReturnType;
         while (baseType.isArray()) {
@@ -53,13 +51,6 @@ public class ProxyAutoWrapper implements BeforeHook, AfterHook {
                     ProxyUtil.wrap(result.returnValue(), baseType));
         }
         return result;
-    }
-
-    private static Class<?>[] unwrapClasses(Class<?>[] classes) {
-        if (classes == null) return new Class[0];
-        return Arrays.stream(classes)
-                .map(ProxyUtil::unwrapClass)
-                .toArray(Class<?>[]::new);
     }
 
     private static Object[] unwrapInstances(Object[] args) {

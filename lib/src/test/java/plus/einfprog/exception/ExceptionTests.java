@@ -3,7 +3,7 @@ package plus.einfprog.exception;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import plus.einfprog.pipeline.ReflectiveException;
+import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.pipeline.TargetInvocationException;
 import plus.einfprog.proxy.Proxy;
@@ -49,7 +49,7 @@ public class ExceptionTests {
     @Test
     void missingMethodShouldThrow() {
         FooProxy foo = ProxyUtil.create(FooProxy.class);
-        Assertions.assertThrows(ReflectiveException.class, foo::missingMethod);
-        Assertions.assertThrows(ReflectiveException.class, () -> foo.wrongArguments(42));
+        Assertions.assertThrows(RuntimeReflectiveOperationException.class, foo::missingMethod);
+        Assertions.assertThrows(RuntimeReflectiveOperationException.class, () -> foo.wrongArguments(42));
     }
 }
