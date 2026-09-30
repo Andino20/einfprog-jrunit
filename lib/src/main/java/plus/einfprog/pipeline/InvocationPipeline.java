@@ -97,7 +97,7 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
             return switch (invocation.executable()) {
                 case Method m -> m.invoke(invocation.target(), args);
                 case Constructor<?> c -> c.newInstance(args);
-                case null, default -> throw new ReflectiveException("executable of invocation was not resolved");
+                case null -> throw new ReflectiveException("executable of invocation was not resolved");
             };
         } catch (InvocationTargetException e) {
             Throwable t = exception().run(e.getCause());
