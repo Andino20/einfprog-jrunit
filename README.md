@@ -28,17 +28,18 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("plus.einfprog:einfprog-jrunit:0.1.0")
 }
+
+
 ```
 
-Every test class must register the extension:
+## Usage
+
+Every test class must register the `EinfprogJRunitExtension` extension::
 
 ```java
 @RegisterExtension
 static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 ```
-
-## Usage
-
 ### Proxies
 
 Declare an interface with the methods you want to call and point `@Proxy` at the fully
@@ -75,8 +76,8 @@ void testGetTitle() {
 }
 ```
 
-Proxies can be passed as arguments and returned from methods (also inside arrays);
-they are unwrapped and wrapped automatically.
+Proxies can be passed as arguments and returned from methods (also works with arrays).
+They are unwrapped and wrapped automatically.
 
 ### Reflection
 
@@ -109,8 +110,9 @@ void testGreeting() {
 ### Errors and timeouts
 
 Exceptions thrown by the tested code are rethrown as `TargetInvocationException` (the original
-exception is available via `getCause()`). Each call runs with a timeout (5 seconds by default)
-and throws a `RuntimeTimeoutException` when it is exceeded, so endless loops don't block the test run.
+exception is available via `getCause()`). Each call runs with a timeout (5 seconds by default; 
+can be changed via global settings) and throws a `RuntimeTimeoutException` when it is exceeded,
+so endless loops don't block the test run.
 
 Tests cannot run in parallel, as the library keeps its state in a global context.
 
