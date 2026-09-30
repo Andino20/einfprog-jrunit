@@ -13,20 +13,25 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Tries to resolve the target method based on the requested name, parameter types and return type.
+ * Tries to resolve the target method or constructor based on the requested name, parameter types and return type.
  *
  * <p>
- *     Iterates over all methods of the target class to check if
+ *     Iterates over all methods/constructors of the target class to check if
  *     their signatures match a list of argument types and return value.
- *     If no matching method is found, it repeats by looking at the target superclass
+ *     If no match is found, it repeats by looking at the target superclass
  *     and so on.
- *     An {@link ReflectiveException} is thrown if no matching method can be found.
- *     If multiple candidates are found, the method with the most specific return type is chosen.
+ *     An {@link ReflectiveException} is thrown if no match can be found.
+ *     If multiple candidates are found in the case of a method,
+ *     the one with the most specific return type is chosen.
  * </p>
  *
  * <p>
  * A parameter type matches if it is the exact same type, if the method parameter type is assignable
  * from the provided type, or if the provided type is the {@link Any} wildcard.
+ * </p>
+ *
+ * <p>
+ * For constructors the {@link Invocation#name()} has to be {@code "<init>"}.
  * </p>
  */
 public class InvocationResolver implements BeforeHook {
