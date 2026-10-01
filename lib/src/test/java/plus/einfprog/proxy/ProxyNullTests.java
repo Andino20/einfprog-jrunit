@@ -28,7 +28,6 @@ public class ProxyNullTests {
     @Test
     void proxyNullTest() {
         FooProxy foo = ProxyUtil.create(FooProxy.class, (Object) null);
-        foo = ProxyUtil.create(FooProxy.class);
         Assertions.assertNull(foo.passBack(null));
     }
 }
