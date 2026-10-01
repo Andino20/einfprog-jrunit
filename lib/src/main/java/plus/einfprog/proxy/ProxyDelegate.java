@@ -5,6 +5,7 @@ import plus.einfprog.pipeline.dto.Invocation;
 import plus.einfprog.pipeline.dto.InvocationResult;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,7 +29,7 @@ public class ProxyDelegate implements TargetInvocationHandler {
     @Override
     public Object invoke(Object o, Method method, Object[] args) {
         InvocationResult result = pipeline.run(Invocation.from(method)
-                .withArguments(List.of(Objects.requireNonNullElse(args, new Object[0])))
+                .withArguments(Arrays.asList(Objects.requireNonNullElse(args, new Object[0])))
                 .withTargetClass(target.getClass())
                 .withTarget(target));
         return result.returnValue();
