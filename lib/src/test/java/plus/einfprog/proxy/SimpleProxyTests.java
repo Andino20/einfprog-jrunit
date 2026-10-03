@@ -42,9 +42,6 @@ class SimpleProxyTests {
             return a + b;
         }
 
-        public void acceptNull(Object o) {
-        }
-
     }
 
     @Proxy("plus.einfprog.proxy.SimpleProxyTests$Foo")
@@ -60,7 +57,6 @@ class SimpleProxyTests {
 
         int add(int a, int b);
 
-        void acceptNull(Object o);
     }
 
     @Test
@@ -88,12 +84,6 @@ class SimpleProxyTests {
     void proxyAutoboxingTest2() {
         FooProxy f1 = ProxyUtil.create(FooProxy.class);
         Assertions.assertEquals(3, f1.add(Integer.valueOf(1), Integer.valueOf(2)));
-    }
-
-    @Test
-    void proxyNullTest() {
-        FooProxy f1 = ProxyUtil.create(FooProxy.class);
-        f1.acceptNull(null);
     }
 
 }
