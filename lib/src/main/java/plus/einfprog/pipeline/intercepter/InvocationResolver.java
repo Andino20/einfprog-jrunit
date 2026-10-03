@@ -16,13 +16,13 @@ import java.util.Optional;
  * Tries to resolve the target method or constructor based on the requested name, parameter types and return type.
  *
  * <p>
- *     Iterates over all methods/constructors of the target class to check if
- *     their signatures match a list of argument types and return value.
- *     If no match is found, it repeats by looking at the target superclass
- *     and so on.
- *     An {@link RuntimeReflectiveOperationException} is thrown if no match can be found.
- *     If multiple candidates are found in the case of a method,
- *     the one with the most specific return type is chosen.
+ * Iterates over all methods/constructors of the target class to check if
+ * their signatures match a list of argument types and return value.
+ * If no match is found, it repeats by looking at the target superclass
+ * and so on.
+ * An {@link RuntimeReflectiveOperationException} is thrown if no match can be found.
+ * If multiple candidates are found in the case of a method,
+ * the one with the most specific return type is chosen.
  * </p>
  *
  * <p>
@@ -61,20 +61,10 @@ public class InvocationResolver implements BeforeHook {
         try {
             return Optional.of(targetClass.getConstructor(types));
         } catch (NoSuchMethodException e) {
-            Class<?> t = targetClass;
-            while (t != null) {
-                Optional<Constructor<?>> constructor = Arrays.stream(t.getDeclaredConstructors())
-                        .filter(c -> match(c.getParameterTypes(), types))
-                        .findAny();
-
-                if (constructor.isPresent()) {
-                    return constructor;
-                }
-
-                t = t.getSuperclass();
-            }
+            return Arrays.stream(targetClass.getDeclaredConstructors())
+                    .filter(c -> match(c.getParameterTypes(), types))
+                    .findAny();
         }
-        return Optional.empty();
     }
 
     private Optional<Method> findMatchingMethod(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {

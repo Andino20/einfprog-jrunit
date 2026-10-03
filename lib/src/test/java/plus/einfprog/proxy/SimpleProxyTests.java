@@ -56,6 +56,7 @@ class SimpleProxyTests {
         FooProxy concatS(FooProxy f);
 
         int add(int a, int b);
+
     }
 
     @Test

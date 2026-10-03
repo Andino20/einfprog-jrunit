@@ -81,7 +81,7 @@ public class Reflected {
                 .name("<init>")
                 .parameterTypes(List.of(types(args)))
                 .returnType(Any.class)
-                .arguments(List.of(args))
+                .arguments(Arrays.asList(args))
                 .targetClass(type)
                 .target(null)
                 .build();

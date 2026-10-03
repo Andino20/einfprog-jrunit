@@ -34,7 +34,7 @@ public class ProxyAutoWrapper implements BeforeHook, AfterHook {
         return invocation
                 .withParameterTypes(paramTypes)
                 .withReturnType(returnType)
-                .withArguments(List.of(args));
+                .withArguments(Arrays.asList(args));
     }
 
     @Override
