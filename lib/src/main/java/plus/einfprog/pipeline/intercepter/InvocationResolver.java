@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Tries to resolve the target method or constructor based on the requested name, parameter types and return type.
@@ -46,12 +47,12 @@ public class InvocationResolver implements BeforeHook {
         Executable exec;
         if (name.equals("<init>")) {
             exec = findMatchingConstructor(targetClass, types)
-                    .orElseThrow(() -> new RuntimeReflectiveOperationException(String.format("Cannot find matching constructor for %s with parameters %s",
-                            targetClass.getSimpleName(), Arrays.toString(types))));
+                    .orElseThrow(() -> new RuntimeReflectiveOperationException(String.format("No constructor %s%s",
+                            targetClass.getSimpleName(), typesToString(types))));
         } else {
             exec = findMatchingMethod(targetClass, name, returnType, types)
-                    .orElseThrow(() -> new RuntimeReflectiveOperationException(String.format("No method %s on %s with parameters %s and return type %s",
-                            name, targetClass.getSimpleName(), Arrays.toString(types), returnType)));
+                    .orElseThrow(() -> new RuntimeReflectiveOperationException(String.format("No method %s %s%s in class %s",
+                            typeToString(returnType), name, typesToString(types), targetClass.getSimpleName())));
         }
         exec.setAccessible(true);
         return invocation.withExecutable(exec);
@@ -118,6 +119,14 @@ public class InvocationResolver implements BeforeHook {
                 specificMethods.add(a);
         }
         return specificMethods.stream().findAny();
+    }
+
+    private static String typesToString(Class<?>[] types) {
+        return Arrays.stream(types).map(InvocationResolver::typeToString).collect(Collectors.joining(", ", "(", ")"));
+    }
+
+    private static String typeToString(Class<?> type) {
+        return type == null || type == Any.class ? "<any type>" : type.getSimpleName();
     }
 
 }
