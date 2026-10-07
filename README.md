@@ -7,29 +7,19 @@ the tested code is printed as JSON to stderr.
 
 ## Getting Started
 
-Requires Java 25 and JUnit 6. The library is published to GitHub Packages, which requires a
-GitHub username and a token with the `read:packages` scope.
+Requires Java 25 and JUnit 6. The library is published to Maven Central.
 
 ```kotlin
 // build.gradle.kts
 repositories {
     mavenCentral()
-    maven {
-        url = uri("https://maven.pkg.github.com/Andino20/einfprog-jrunit")
-        credentials {
-            username = System.getenv("GITHUB_ACTOR")
-            password = System.getenv("GITHUB_TOKEN")
-        }
-    }
 }
 
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("plus.einfprog:einfprog-jrunit:0.1.0")
+    testImplementation("io.github.andino20:einfprog-jrunit:0.1.1")
 }
-
-
 ```
 
 ## Usage
@@ -132,4 +122,4 @@ Please make sure to update tests as appropriate. Run all tests with:
 ```
 
 ## License
-TBD
+Apache-2.0
