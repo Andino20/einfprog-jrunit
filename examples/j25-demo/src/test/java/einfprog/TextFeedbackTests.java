@@ -8,6 +8,7 @@ import plus.einfprog.io.IOAssertions;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.log.format.TextTraceFormatter;
 import plus.einfprog.proxy.ProxyUtil;
+import plus.einfprog.reflection.Reflected;
 
 /**
  * Failing tests that show the human-readable feedback of {@link TextTraceFormatter}.
@@ -37,6 +38,16 @@ public class TextFeedbackTests {
         ProgramProxy proxy = ProxyUtil.create(ProgramProxy.class);
         proxy.helloWorld();
         IOAssertions.assertOutput("Hello Java!" + System.lineSeparator());
+    }
+
+    @Test
+    void missingMethodTest() {
+        Reflected.on("Program").call("subtract", 2, 1);
+    }
+
+    @Test
+    void missingClassTest() {
+        Reflected.on("Calculator").create();
     }
 
 }

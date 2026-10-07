@@ -2,12 +2,13 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
+    id("org.jreleaser") version "1.26.0"
     `maven-publish`
     signing
 }
 
-group = "plus.einfprog"
-version = "0.1.0"
+group = "io.github.andino20"
+version = "0.1.1"
 
 base {
     archivesName = "einfprog-jrunit"
@@ -44,6 +45,7 @@ publishing {
     publications {
         create<MavenPublication>("library") {
             from(components["java"])
+            artifactId = "einfprog-jrunit"
 
             pom {
                 name = "einfprog-jrunit"
@@ -76,17 +78,54 @@ publishing {
     }
 
     repositories {
+        // JReleaser picks the artifacts up from here, signs them and uploads them to Maven Central.
         maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/Andino20/einfprog-jrunit")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
+            name = "staging"
+            url = uri(layout.buildDirectory.dir("staging-deploy"))
         }
     }
 }
 
+jreleaser {
+    // The git repository lives in the root project, not in lib/.
+    gitRootSearch = true
+
+    project {
+        name = "einfprog-jrunit"
+        description = "A Java unit-testing framework utilizing reflection and dynamic proxies, built on Junit 6."
+        authors = listOf("Andreas Schlager")
+        license = "Apache-2.0"
+        links {
+            homepage = "https://github.com/Andino20/einfprog-jrunit"
+        }
+        inceptionYear = "2026"
+    }
+
+    signing {
+        active = org.jreleaser.model.Active.ALWAYS
+        armored = true
+    }
+
+    release {
+        github {
+            repoOwner = "Andino20"
+            name = "einfprog-jrunit"
+            overwrite = true
+        }
+    }
+
+    deploy {
+        maven {
+            mavenCentral {
+                create("sonatype") {
+                    active = org.jreleaser.model.Active.ALWAYS
+                    url = "https://central.sonatype.com/api/v1/publisher"
+                    stagingRepository(layout.buildDirectory.dir("staging-deploy").get().asFile.path)
+                }
+            }
+        }
+    }
+}
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.

@@ -2,6 +2,7 @@ package plus.einfprog.log.format;
 
 import plus.einfprog.io.EinfprogJRunitAssertionError;
 import plus.einfprog.log.event.*;
+import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
 import plus.einfprog.pipeline.RuntimeTimeoutException;
 import plus.einfprog.pipeline.TargetInvocationException;
 
@@ -111,6 +112,7 @@ public class TextTraceFormatter implements TraceFormatter {
                     + "Expected output:\n" + output(e.getExpected()) + "\n"
                     + "Actual output:\n" + output(e.getActual());
             case AssertionError e -> "The test expected something else:\n" + indent(message(e), INDENT);
+            case RuntimeReflectiveOperationException e -> describeReflectiveException(e);
             case null -> "Unknown error.";
             default -> throwable.getClass().getSimpleName() + ": " + message(throwable);
         };
@@ -126,6 +128,17 @@ public class TextTraceFormatter implements TraceFormatter {
             }
         }
         return description;
+    }
+
+    private static String describeReflectiveException(RuntimeReflectiveOperationException exception) {
+        if (exception.getCause() instanceof ClassNotFoundException e) {
+            return "The test could not find the class " + message(e) + ".\n"
+                    + "Check that the class exists and that its name and package are spelled exactly as required.";
+        }
+        Throwable detail = exception.getCause() == null ? exception : exception.getCause();
+        return "The test could not find something it needs in your code:\n"
+                + INDENT + message(detail) + "\n"
+                + "Check that the name, parameter types and return type are exactly as required.";
     }
 
     private static String output(String output) {
