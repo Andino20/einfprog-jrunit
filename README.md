@@ -1,4 +1,7 @@
 # einfprog-jrunit
+
+[![codecov](https://codecov.io/github/Andino20/einfprog-jrunit/graph/badge.svg?token=XLJXE4C4OV)](https://codecov.io/github/Andino20/einfprog-jrunit)
+
 A Java unit-testing framework utilizing reflection and dynamic proxies, built around Junit 6.
 
 It lets you test code without compiling against it: tests talk to the code under test through
