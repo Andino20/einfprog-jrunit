@@ -2,6 +2,8 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
+    jacoco
+
     id("org.jreleaser") version "1.26.0"
     `maven-publish`
     signing
@@ -103,7 +105,6 @@ jreleaser {
 
     signing {
         active = org.jreleaser.model.Active.ALWAYS
-        armored = true
     }
 
     release {
@@ -130,4 +131,12 @@ jreleaser {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+    }
 }
