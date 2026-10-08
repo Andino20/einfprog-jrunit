@@ -1,6 +1,9 @@
 # einfprog-jrunit
 
+[![Build](https://github.com/Andino20/einfprog-jrunit/actions/workflows/build.yml/badge.svg)](https://github.com/Andino20/einfprog-jrunit/actions/workflows/build.yml)
 [![codecov](https://codecov.io/github/Andino20/einfprog-jrunit/graph/badge.svg?token=XLJXE4C4OV)](https://codecov.io/github/Andino20/einfprog-jrunit)
+![Maven Central Version](https://img.shields.io/maven-central/v/io.github.andino20/einfprog-jrunit)
+[![javadoc](https://javadoc.io/badge2/io.github.andino20/einfprog-jrunit/javadoc.svg)](https://javadoc.io/doc/io.github.andino20/einfprog-jrunit)
 
 A Java unit-testing framework utilizing reflection and dynamic proxies, built around Junit 6.
 
