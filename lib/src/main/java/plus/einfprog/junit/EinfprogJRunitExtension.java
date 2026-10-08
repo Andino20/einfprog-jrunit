@@ -3,6 +3,7 @@ package plus.einfprog.junit;
 import lombok.AllArgsConstructor;
 import lombok.With;
 import org.jspecify.annotations.NonNull;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -70,7 +71,7 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
         eventCollector.event(new ExceptionEvent(throwable));
 
         TraceFormatter traceFormatter = EinfprogJRunit.getContext().traceFormatter();
-        System.err.println(traceFormatter.format(eventCollector.getTrace()));
+        Assertions.fail(traceFormatter.format(eventCollector.getTrace()));
         throw throwable;
     }
 
