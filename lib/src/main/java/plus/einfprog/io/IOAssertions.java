@@ -4,6 +4,7 @@ import plus.einfprog.EinfprogJRunit;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Utility class providing assertion and setup methods for testing console input/output (I/O).
@@ -11,7 +12,7 @@ import java.io.ByteArrayOutputStream;
 public final class IOAssertions {
 
     public static void prepareInput(Input input) {
-        ByteArrayInputStream in = new ByteArrayInputStream(input.toString().getBytes());
+        ByteArrayInputStream in = new ByteArrayInputStream(input.toString().getBytes(StandardCharsets.UTF_8));
         System.setIn(in);
     }
 
@@ -28,7 +29,7 @@ public final class IOAssertions {
 
     private static String consumeOutputBuffer() {
         ByteArrayOutputStream out = EinfprogJRunit.getContext().out();
-        String s = out.toString();
+        String s = out.toString(StandardCharsets.UTF_8);
         out.reset();
         return s;
     }

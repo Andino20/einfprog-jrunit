@@ -88,6 +88,7 @@ public class Reflected {
         return new Reflected(pipeline.run(invocation).returnValue());
     }
 
+    @SuppressWarnings("TypeParameterUnusedInFormals")
     public <T> T get() {
         return (T) target;
     }

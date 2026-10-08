@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 
 import java.lang.IO;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class IOTests {
@@ -37,7 +38,7 @@ public class IOTests {
     void scannerInputTest() {
         IOAssertions.prepareInput(Input.of("Hello world!", 42));
 
-        try (var scanner = new Scanner(System.in)) {
+        try (var scanner = new Scanner(System.in, StandardCharsets.UTF_8)) {
             Assertions.assertEquals("Hello world!", scanner.nextLine());
             Assertions.assertEquals(42, scanner.nextInt());
         }

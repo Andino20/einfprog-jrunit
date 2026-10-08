@@ -110,7 +110,7 @@ public class InvocationResolver implements BeforeHook {
             for (Method b : methods) {
                 Class<?> retA = a.getReturnType();
                 Class<?> retB = b.getReturnType();
-                if (a != b && !retA.equals(retB) && retA.isAssignableFrom(retB)) {
+                if (a.equals(b) && !retA.equals(retB) && retA.isAssignableFrom(retB)) {
                     isMostSpecific = false;
                     break;
                 }

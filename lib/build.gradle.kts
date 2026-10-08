@@ -1,8 +1,10 @@
+import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
     jacoco
+    id("net.ltgt.errorprone") version "5.1.1"
 
     id("org.jreleaser") version "1.26.0"
     `maven-publish`
@@ -32,6 +34,8 @@ dependencies {
 
     testCompileOnly("org.projectlombok:lombok:1.18.46")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.46")
+
+    errorprone("com.google.errorprone:error_prone_core:2.50.0")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -138,5 +142,12 @@ tasks.jacocoTestReport {
     dependsOn(tasks.test)
     reports {
         xml.required.set(true)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.errorprone {
+        // Crashes on the null checks Lombok generates for @NonNull.
+        disable("StringConcatToTextBlock")
     }
 }
