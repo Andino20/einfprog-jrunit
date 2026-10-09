@@ -39,7 +39,7 @@ public interface ProxyUtil {
                     target.getClass().getSimpleName(),
                     proxyClass.getSimpleName()));
 
-        return new ProxyBuilder<>(proxyClass, target).build();
+        return ProxyDelegate.create(proxyClass, target);
     }
 
     /**

@@ -1,5 +1,6 @@
 package plus.einfprog.proxy;
 
+import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.Invocation;
 import plus.einfprog.pipeline.InvocationResult;
@@ -20,7 +21,13 @@ public class ProxyDelegate implements TargetInvocationHandler {
     private final Object target;
     private final InvocationPipeline pipeline;
 
-    public ProxyDelegate(Object target, InvocationPipeline pipeline) {
+    public static <T> T create(Class<T> proxyClass, Object target) {
+        ProxyDelegate handler = new ProxyDelegate(target, EinfprogJRunit.getContext().pipeline());
+        Object proxy = java.lang.reflect.Proxy.newProxyInstance(proxyClass.getClassLoader(), new Class<?>[]{proxyClass}, handler);
+        return proxyClass.cast(proxy);
+    }
+
+    private ProxyDelegate(Object target, InvocationPipeline pipeline) {
         this.target = target;
         this.pipeline = pipeline;
     }
