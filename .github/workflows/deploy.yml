@@ -6,6 +6,10 @@ on:
       version:
         description: 'Semantic Version'
         required: true
+      dry-run:
+        description: 'Dry run (no push, no release, no deploy)'
+        type: boolean
+        default: true
 
 jobs:
   release:
@@ -33,7 +37,10 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "Set release version to ${{ github.event.inputs.version }}"
-          git push
+
+      - name: Push
+        if: ${{ !inputs.dry-run }}
+        run: git push
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -48,6 +55,7 @@ jobs:
         with:
           arguments: 'full-release'
         env:
+          JRELEASER_DRY_RUN: ${{ inputs.dry-run }}
           JRELEASER_PROJECT_VERSION: ${{ inputs.version }}
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JRELEASER_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
