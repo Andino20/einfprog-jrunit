@@ -12,7 +12,7 @@ import plus.einfprog.Settings;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.collector.LinearEventHistory;
 import plus.einfprog.log.event.ExceptionEvent;
-import plus.einfprog.log.format.JsonTraceFormatter;
+import plus.einfprog.log.format.TextTraceFormatter;
 import plus.einfprog.log.format.TraceFormatter;
 import plus.einfprog.pipeline.InvocationPipeline;
 
@@ -55,7 +55,7 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
         return new EinfprogJRunitExtension(
                 InvocationPipeline::empty,
                 LinearEventHistory::new,
-                JsonTraceFormatter::new,
+                TextTraceFormatter::new,
                 Settings.getDefault());
     }
 
