@@ -12,7 +12,6 @@ plugins {
 }
 
 group = "io.github.andino20"
-version = "0.1.1"
 
 base {
     archivesName = "einfprog-jrunit"
@@ -88,46 +87,6 @@ publishing {
         maven {
             name = "staging"
             url = uri(layout.buildDirectory.dir("staging-deploy"))
-        }
-    }
-}
-
-jreleaser {
-    // The git repository lives in the root project, not in lib/.
-    gitRootSearch = true
-
-    project {
-        name = "einfprog-jrunit"
-        description = "A Java unit-testing framework utilizing reflection and dynamic proxies, built on Junit 6."
-        authors = listOf("Andreas Schlager")
-        license = "Apache-2.0"
-        links {
-            homepage = "https://github.com/Andino20/einfprog-jrunit"
-        }
-        inceptionYear = "2026"
-    }
-
-    signing {
-        active = org.jreleaser.model.Active.ALWAYS
-    }
-
-    release {
-        github {
-            repoOwner = "Andino20"
-            name = "einfprog-jrunit"
-            overwrite = true
-        }
-    }
-
-    deploy {
-        maven {
-            mavenCentral {
-                create("sonatype") {
-                    active = org.jreleaser.model.Active.ALWAYS
-                    url = "https://central.sonatype.com/api/v1/publisher"
-                    stagingRepository(layout.buildDirectory.dir("staging-deploy").get().asFile.path)
-                }
-            }
         }
     }
 }
