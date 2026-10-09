@@ -1,12 +1,11 @@
 package plus.einfprog.proxy;
 
 import plus.einfprog.pipeline.InvocationPipeline;
-import plus.einfprog.pipeline.dto.Invocation;
-import plus.einfprog.pipeline.dto.InvocationResult;
+import plus.einfprog.pipeline.Invocation;
+import plus.einfprog.pipeline.InvocationResult;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 /**

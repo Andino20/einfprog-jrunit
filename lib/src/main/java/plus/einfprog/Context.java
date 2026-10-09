@@ -3,9 +3,9 @@ package plus.einfprog;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.format.TraceFormatter;
 import plus.einfprog.pipeline.InvocationPipeline;
-import plus.einfprog.pipeline.intercepter.InvocationTracer;
-import plus.einfprog.pipeline.intercepter.InvocationResolver;
-import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
+import plus.einfprog.pipeline.hook.InvocationTracer;
+import plus.einfprog.pipeline.hook.InvocationResolver;
+import plus.einfprog.pipeline.hook.ProxyAutoWrapper;
 
 import java.io.ByteArrayOutputStream;
 
@@ -14,7 +14,7 @@ import java.io.ByteArrayOutputStream;
  * <p>
  * This record serves as a central container holding the execution {@link InvocationPipeline}, logging
  * utilities, global {@link Settings}, and the captured standard output stream. Upon initialization, it automatically
- * configures the default interceptor pipeline with proxy wrapping, method resolution, and invocation tracing.
+ * configures the default hook pipeline with proxy wrapping, method resolution, and invocation tracing.
  * </p>
  *
  * @param pipeline the invocation pipeline managing method execution hooks

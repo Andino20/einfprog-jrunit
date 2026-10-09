@@ -1,12 +1,11 @@
-package plus.einfprog.pipeline.intercepter;
+package plus.einfprog.pipeline.hook;
 
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.event.ConstructorCallEvent;
 import plus.einfprog.log.event.MethodCallEvent;
 import plus.einfprog.log.event.InvocationReturnEvent;
-import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
-import plus.einfprog.pipeline.dto.Invocation;
-import plus.einfprog.pipeline.dto.InvocationResult;
+import plus.einfprog.pipeline.Invocation;
+import plus.einfprog.pipeline.InvocationResult;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -24,11 +23,11 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     }
 
     @Override
-    public Invocation intercept(Invocation invocation) {
+    public Invocation apply(Invocation invocation) {
         switch (invocation.executable()) {
             case Method _ -> traceMethod(invocation);
             case Constructor<?> _ -> traceConstructor(invocation);
-            case null -> throw new RuntimeReflectiveOperationException("executable of invocation was not resolved");
+            case null -> throw new IllegalStateException("executable of invocation was not resolved");
         }
         return invocation;
     }
@@ -54,7 +53,7 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     }
 
     @Override
-    public InvocationResult intercept(InvocationResult result) {
+    public InvocationResult apply(InvocationResult result) {
         eventCollector.event(InvocationReturnEvent.builder()
                 .id(result.id().toString())
                 .returnValue(safeObjectToString(result.returnValue()))

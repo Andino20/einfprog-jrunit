@@ -1,9 +1,9 @@
 package plus.einfprog.reflection;
 
 import plus.einfprog.EinfprogJRunit;
-import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
+import plus.einfprog.exception.TargetNotFoundException;
 import plus.einfprog.pipeline.InvocationPipeline;
-import plus.einfprog.pipeline.dto.Invocation;
+import plus.einfprog.pipeline.Invocation;
 import plus.einfprog.proxy.ProxyUtil;
 
 import java.util.Arrays;
@@ -28,11 +28,11 @@ public class Reflected {
     private final Object target;
     private final boolean isStatic;
 
-    private Reflected(String className) throws RuntimeReflectiveOperationException {
+    private Reflected(String className) throws TargetNotFoundException {
         try {
             this.type = Class.forName(className);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeReflectiveOperationException(e);
+            throw new TargetNotFoundException(e);
         }
         this.target = null;
         this.isStatic = true;
@@ -44,7 +44,7 @@ public class Reflected {
         this.isStatic = false;
     }
 
-    public static Reflected on(String className) throws RuntimeReflectiveOperationException {
+    public static Reflected on(String className) throws TargetNotFoundException {
         return new Reflected(className);
     }
 
@@ -97,7 +97,7 @@ public class Reflected {
         if (!ProxyUtil.isProxyClass(proxyClass))
             throw new IllegalArgumentException("Argument has to be an interface with an @Proxy annotation");
         if (isStatic)
-            throw new IllegalCallerException("Cannot wrap a static class in a proxy");
+            throw new IllegalStateException("Cannot wrap a static class in a proxy");
         return ProxyUtil.wrap(target, proxyClass);
     }
 

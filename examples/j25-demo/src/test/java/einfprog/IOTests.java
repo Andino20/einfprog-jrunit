@@ -9,7 +9,7 @@ import plus.einfprog.junit.EinfprogJRunitExtension;
 public class IOTests {
 
     @RegisterExtension
-    static EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
     @Test
     void assertConsoleOutputTest() {

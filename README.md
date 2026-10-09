@@ -28,6 +28,8 @@ dependencies {
 }
 ```
 
+The Maven group is `io.github.andino20`, but the Java package is `plus.einfprog`.
+
 ## Usage
 
 Every test class must register the `EinfprogJRunitExtension` extension:
@@ -107,7 +109,7 @@ void testGreeting() {
 
 Exceptions thrown by the tested code are rethrown as `TargetInvocationException` (the original
 exception is available via `getCause()`). Each call runs with a timeout (5 seconds by default; 
-can be changed via global settings) and throws a `RuntimeTimeoutException` when it is exceeded,
+can be changed via global settings) and throws an `InvocationTimeoutException` when it is exceeded,
 so endless loops don't block the test run.
 
 Tests cannot run in parallel, as the library keeps its state in a global context.

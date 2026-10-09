@@ -12,7 +12,7 @@ import java.util.Scanner;
 public class IOTests {
 
     @RegisterExtension
-    private final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
     @Test
     void outputTest() {

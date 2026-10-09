@@ -1,7 +1,7 @@
-package plus.einfprog.pipeline.intercepter;
+package plus.einfprog.pipeline.hook;
 
-import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
-import plus.einfprog.pipeline.dto.Invocation;
+import plus.einfprog.exception.TargetNotFoundException;
+import plus.einfprog.pipeline.Invocation;
 import plus.einfprog.reflection.Any;
 
 import java.lang.reflect.Executable;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * their signatures match a list of argument types and return value.
  * If no match is found, it repeats by looking at the target superclass
  * and so on.
- * An {@link RuntimeReflectiveOperationException} is thrown if no match can be found.
+ * A {@link TargetNotFoundException} is thrown if no match can be found.
  * If multiple candidates are found in the case of a method,
  * the one with the most specific return type is chosen.
  * </p>
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 public class InvocationResolver implements BeforeHook {
 
     @Override
-    public Invocation intercept(Invocation invocation) {
+    public Invocation apply(Invocation invocation) {
         Class<?> targetClass = invocation.targetClass();
         String name = invocation.name();
         Class<?>[] types = invocation.parameterTypes().toArray(Class<?>[]::new);
@@ -47,11 +47,11 @@ public class InvocationResolver implements BeforeHook {
         Executable exec;
         if (name.equals("<init>")) {
             exec = findMatchingConstructor(targetClass, types)
-                    .orElseThrow(() -> new RuntimeReflectiveOperationException(String.format("No constructor %s%s",
+                    .orElseThrow(() -> new TargetNotFoundException(String.format("No constructor %s%s",
                             targetClass.getSimpleName(), typesToString(types))));
         } else {
             exec = findMatchingMethod(targetClass, name, returnType, types)
-                    .orElseThrow(() -> new RuntimeReflectiveOperationException(String.format("No method %s %s%s in class %s",
+                    .orElseThrow(() -> new TargetNotFoundException(String.format("No method %s %s%s in class %s",
                             typeToString(returnType), name, typesToString(types), targetClass.getSimpleName())));
         }
         exec.setAccessible(true);

@@ -1,11 +1,11 @@
 package plus.einfprog.pipeline;
 
 import plus.einfprog.EinfprogJRunit;
-import plus.einfprog.pipeline.dto.Invocation;
-import plus.einfprog.pipeline.dto.InvocationResult;
-import plus.einfprog.pipeline.intercepter.AfterHook;
-import plus.einfprog.pipeline.intercepter.BeforeHook;
-import plus.einfprog.pipeline.intercepter.ExceptionHook;
+import plus.einfprog.exception.InvocationTimeoutException;
+import plus.einfprog.exception.TargetInvocationException;
+import plus.einfprog.pipeline.hook.AfterHook;
+import plus.einfprog.pipeline.hook.BeforeHook;
+import plus.einfprog.pipeline.hook.ExceptionHook;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -32,7 +32,7 @@ import java.util.concurrent.*;
  * and can be retrieved by {@code getCause()}.</p>
  *
  * <p>If the execution of a target method takes more time than the pre-configured timeout duration, it is
- * interrupted and a {@link RuntimeTimeoutException} is thrown.
+ * interrupted and a {@link InvocationTimeoutException} is thrown.
  * This timeout can be configured via {@link plus.einfprog.Settings} during library initialization.</p>
  *
  * @param before The pipeline to be executed before the target method is invoked.
@@ -44,7 +44,7 @@ import java.util.concurrent.*;
  * @see AfterHook
  * @see ExceptionHook
  * @see TargetInvocationException
- * @see RuntimeTimeoutException
+ * @see InvocationTimeoutException
  */
 public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
                                  Pipeline<InvocationResult, AfterHook> after,
@@ -56,9 +56,9 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
      */
     public static InvocationPipeline empty() {
         return new InvocationPipeline(
-                new Pipeline<>(beforeHook -> beforeHook::intercept),
-                new Pipeline<>(afterHook -> afterHook::intercept),
-                new Pipeline<>(exceptionHook -> exceptionHook::intercept));
+                new Pipeline<>(beforeHook -> beforeHook::apply),
+                new Pipeline<>(afterHook -> afterHook::apply),
+                new Pipeline<>(exceptionHook -> exceptionHook::apply));
     }
 
     public InvocationResult run(Invocation invocation) {
@@ -85,7 +85,7 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
         } catch (InterruptedException e) {
             throw new RuntimeException("an unexpected error occurred", e);
         } catch (TimeoutException e) {
-            throw new RuntimeTimeoutException(e);
+            throw new InvocationTimeoutException(e);
         } finally {
             executor.shutdownNow();
         }
@@ -97,7 +97,7 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
             return switch (invocation.executable()) {
                 case Method m -> m.invoke(invocation.target(), args);
                 case Constructor<?> c -> c.newInstance(args);
-                case null -> throw new RuntimeReflectiveOperationException("executable of invocation was not resolved");
+                case null -> throw new IllegalStateException("executable of invocation was not resolved");
             };
         } catch (InvocationTargetException e) {
             Throwable t = exception().run(e.getCause());

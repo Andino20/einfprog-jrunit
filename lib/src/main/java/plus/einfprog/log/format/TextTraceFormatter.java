@@ -1,10 +1,10 @@
 package plus.einfprog.log.format;
 
-import plus.einfprog.io.EinfprogJRunitAssertionError;
+import plus.einfprog.exception.InvocationTimeoutException;
+import plus.einfprog.exception.OutputMismatchException;
+import plus.einfprog.exception.TargetInvocationException;
+import plus.einfprog.exception.TargetNotFoundException;
 import plus.einfprog.log.event.*;
-import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
-import plus.einfprog.pipeline.RuntimeTimeoutException;
-import plus.einfprog.pipeline.TargetInvocationException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -106,13 +106,13 @@ public class TextTraceFormatter implements TraceFormatter {
     private static String describe(Throwable throwable) {
         return switch (throwable) {
             case TargetInvocationException e when e.getCause() != null -> describeTargetException(e.getCause());
-            case RuntimeTimeoutException _ ->
+            case InvocationTimeoutException _ ->
                     "Your code took too long and was stopped.\nCheck for a loop that never ends.";
-            case EinfprogJRunitAssertionError e -> "Your program printed something else than the test expected.\n"
+            case OutputMismatchException e -> "Your program printed something else than the test expected.\n"
                     + "Expected output:\n" + output(e.getExpected()) + "\n"
                     + "Actual output:\n" + output(e.getActual());
             case AssertionError e -> "The test expected something else:\n" + indent(message(e), INDENT);
-            case RuntimeReflectiveOperationException e -> describeReflectiveException(e);
+            case TargetNotFoundException e -> describeTargetNotFound(e);
             case null -> "Unknown error.";
             default -> throwable.getClass().getSimpleName() + ": " + message(throwable);
         };
@@ -130,7 +130,7 @@ public class TextTraceFormatter implements TraceFormatter {
         return description;
     }
 
-    private static String describeReflectiveException(RuntimeReflectiveOperationException exception) {
+    private static String describeTargetNotFound(TargetNotFoundException exception) {
         if (exception.getCause() instanceof ClassNotFoundException e) {
             return "The test could not find the class " + message(e) + ".\n"
                     + "Check that the class exists and that its name and package are spelled exactly as required.";

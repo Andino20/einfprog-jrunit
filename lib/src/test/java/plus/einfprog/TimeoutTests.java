@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
-import plus.einfprog.pipeline.RuntimeTimeoutException;
+import plus.einfprog.exception.InvocationTimeoutException;
 import plus.einfprog.proxy.Proxy;
 import plus.einfprog.proxy.ProxyUtil;
 
@@ -36,6 +36,6 @@ public class TimeoutTests {
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void proxyCallShouldTimeout() {
         FooProxy foo = ProxyUtil.create(FooProxy.class);
-        Assertions.assertThrows(RuntimeTimeoutException.class, foo::timeout);
+        Assertions.assertThrows(InvocationTimeoutException.class, foo::timeout);
     }
 }

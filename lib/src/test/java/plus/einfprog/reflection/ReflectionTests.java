@@ -10,7 +10,7 @@ import static plus.einfprog.reflection.Reflected.on;
 class ReflectionTests {
 
     @RegisterExtension
-    private static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
     private static final String FOO_CLASS_NAME = "plus.einfprog.reflection.ReflectionTests$Foo";
 

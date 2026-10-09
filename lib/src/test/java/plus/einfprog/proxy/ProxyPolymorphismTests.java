@@ -8,8 +8,9 @@ import plus.einfprog.junit.EinfprogJRunitExtension;
 class ProxyPolymorphismTests {
 
     @RegisterExtension
-    private static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
 
+    @SuppressWarnings("unused")
     public static class Foo {
 
         public String getName() {
@@ -31,14 +32,8 @@ class ProxyPolymorphismTests {
 
     }
 
-    public static class Unrelated {
-
-    }
-
     @Proxy("plus.einfprog.proxy.ProxyPolymorphismTests$Foo")
     interface FooProxy {
-        String getName();
-
         String concatNames(FooProxy other);
     }
 

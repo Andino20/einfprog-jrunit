@@ -1,7 +1,7 @@
-package plus.einfprog.pipeline.intercepter;
+package plus.einfprog.pipeline.hook;
 
-import plus.einfprog.pipeline.dto.Invocation;
-import plus.einfprog.pipeline.dto.InvocationResult;
+import plus.einfprog.pipeline.Invocation;
+import plus.einfprog.pipeline.InvocationResult;
 import plus.einfprog.proxy.ProxyUtil;
 
 import java.util.*;
@@ -23,7 +23,7 @@ public class ProxyAutoWrapper implements BeforeHook, AfterHook {
     private final Map<UUID, Class<?>> originalReturnTypes = new HashMap<>();
 
     @Override
-    public Invocation intercept(Invocation invocation) {
+    public Invocation apply(Invocation invocation) {
         List<Class<?>> paramTypes = invocation.parameterTypes().stream()
                 .<Class<?>>map(ProxyUtil::unwrapClass)
                 .toList();
@@ -38,7 +38,7 @@ public class ProxyAutoWrapper implements BeforeHook, AfterHook {
     }
 
     @Override
-    public InvocationResult intercept(InvocationResult result) {
+    public InvocationResult apply(InvocationResult result) {
         Class<?> expectedReturnType = originalReturnTypes.remove(result.id());
         Class<?> baseType = expectedReturnType;
         while (baseType.isArray()) {

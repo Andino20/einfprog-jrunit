@@ -1,6 +1,6 @@
 package plus.einfprog.proxy;
 
-import plus.einfprog.pipeline.RuntimeReflectiveOperationException;
+import plus.einfprog.exception.TargetNotFoundException;
 import plus.einfprog.reflection.Reflected;
 
 import java.lang.reflect.Array;
@@ -14,32 +14,32 @@ public interface ProxyUtil {
 
     static <T> T create(Class<T> proxyClass, Object... args) {
         String targetClassName = Objects.requireNonNull(proxyClass.getDeclaredAnnotation(Proxy.class)).value();
-        Object subject = Reflected.on(targetClassName).create(args).get();
-        return wrap(subject, proxyClass);
+        Object target = Reflected.on(targetClassName).create(args).get();
+        return wrap(target, proxyClass);
     }
 
     /**
-     * Wraps the given subject in a proxy of the specified class.
+     * Wraps the given target in a proxy of the specified class.
      *
-     * <p>If {@code subject} is {@code null}, {@code null} is returned.
+     * <p>If {@code target} is {@code null}, {@code null} is returned.
      *
-     * @param subject    the object to wrap; may be {@code null}
-     * @param proxyClass the proxy class to wrap the subject in; must not be {@code null}
-     * @return a proxy of type {@code T} wrapping the subject, or {@code null} if subject is {@code null}
+     * @param target     the object to wrap; may be {@code null}
+     * @param proxyClass the proxy class to wrap the target in; must not be {@code null}
+     * @return a proxy of type {@code T} wrapping the target, or {@code null} if target is {@code null}
      * @throws NullPointerException     if {@code proxyClass} is {@code null}
-     * @throws IllegalArgumentException if the subject cannot be wrapped in the given proxy class
+     * @throws IllegalArgumentException if the target cannot be wrapped in the given proxy class
      */
-    static <T> T wrap(Object subject, Class<T> proxyClass) {
+    static <T> T wrap(Object target, Class<T> proxyClass) {
         Objects.requireNonNull(proxyClass, "Proxy class must not be null.");
-        if (subject == null)
+        if (target == null)
             return null;
 
-        if (!canWrap(subject, proxyClass))
-            throw new IllegalArgumentException(String.format("Subject of type %s can not be wrapped in %s",
-                    subject.getClass().getSimpleName(),
+        if (!canWrap(target, proxyClass))
+            throw new IllegalArgumentException(String.format("Target of type %s can not be wrapped in %s",
+                    target.getClass().getSimpleName(),
                     proxyClass.getSimpleName()));
 
-        return new ProxyBuilder<>(proxyClass, subject).build();
+        return new ProxyBuilder<>(proxyClass, target).build();
     }
 
     /**
@@ -47,7 +47,7 @@ public interface ProxyUtil {
      * both single-dimensional and multidimensional arrays.
      *
      * <p>For multidimensional arrays, a new array of equivalent dimensions is
-     * returned with each element recursively wrapped via {@link #wrapArray(Object, Class)}.
+     * returned with each element recursively wrapped.
      * For single-dimensional arrays, each element is wrapped via {@link #wrap(Object, Class)}.
      *
      * <p>If {@code source} is {@code null}, {@code null} is returned.
@@ -125,8 +125,8 @@ public interface ProxyUtil {
         boolean isProxy = java.lang.reflect.Proxy.isProxyClass(proxy.getClass());
         if (isProxy) {
             InvocationHandler handler = java.lang.reflect.Proxy.getInvocationHandler(proxy);
-            if (handler instanceof TargetInvocationHandler subjectHandler) {
-                return subjectHandler.getTarget();
+            if (handler instanceof TargetInvocationHandler targetHandler) {
+                return targetHandler.getTarget();
             }
         }
         return proxy;
@@ -139,8 +139,7 @@ public interface ProxyUtil {
      * <p>If the array's component type is not a proxy, the original array is
      * returned as-is. For multidimensional arrays, the component type of the
      * deepest dimension is inspected; if it is a proxy type, a new array of
-     * equivalent dimensions is returned with each element recursively unwrapped
-     * via {@link #unwrapArray(Object)}.
+     * equivalent dimensions is returned with each element recursively unwrapped.
      *
      * <p>If {@code source} is {@code null}, {@code null} is returned.
      *
@@ -252,26 +251,26 @@ public interface ProxyUtil {
     }
 
     /**
-     * Returns whether the given subject can be wrapped in the specified proxy class.
+     * Returns whether the given target can be wrapped in the specified proxy class.
      *
      * <p>Returns {@code false} if {@code proxyClass} is not a proxy class, if the
-     * subject's type is not compatible with the proxy's target class, or if any
-     * non-reflective exception occurs during resolution. A {@code null} subject
+     * target's type is not compatible with the proxy's target class, or if any
+     * non-reflective exception occurs during resolution. A {@code null} target
      * is considered wrappable in any valid proxy class.
      *
-     * @param subject    the object to wrap; may be {@code null}
-     * @param proxyClass the proxy class to wrap the subject in; may be {@code null}
-     * @return {@code true} if the subject can be wrapped in the given proxy class
-     * @throws RuntimeReflectiveOperationException if the proxy's target class could not be resolved
+     * @param target     the object to wrap; may be {@code null}
+     * @param proxyClass the proxy class to wrap the target in; may be {@code null}
+     * @return {@code true} if the target can be wrapped in the given proxy class
+     * @throws TargetNotFoundException if the proxy's target class could not be resolved
      */
-    static boolean canWrap(Object subject, Class<?> proxyClass) {
+    static boolean canWrap(Object target, Class<?> proxyClass) {
         if (!isProxyClass(proxyClass))
             return false;
 
         try {
             Class<?> targetClass = getTargetClass(proxyClass);
-            return subject == null || targetClass.isInstance(subject);
-        } catch (RuntimeReflectiveOperationException e) {
+            return target == null || targetClass.isInstance(target);
+        } catch (TargetNotFoundException e) {
             throw e;
         } catch (Exception e) {
             return false;
@@ -279,26 +278,26 @@ public interface ProxyUtil {
     }
 
     /**
-     * Returns whether instances of the given subject class can be wrapped in the
+     * Returns whether instances of the given target class can be wrapped in the
      * specified proxy class.
      *
      * <p>Returns {@code false} if either argument is {@code null}, if {@code proxyClass}
-     * is not a proxy class, if {@code subjectClass} is not assignable to the proxy's
+     * is not a proxy class, if {@code targetType} is not assignable to the proxy's
      * target class, or if any non-reflective exception occurs during resolution.
      *
-     * @param subjectClass the class to check assignability for; may be {@code null}
-     * @param proxyClass   the proxy class to wrap instances in; may be {@code null}
-     * @return {@code true} if instances of {@code subjectClass} can be wrapped in the given proxy class
-     * @throws RuntimeReflectiveOperationException if the proxy's target class could not be resolved
+     * @param targetType the class to check assignability for; may be {@code null}
+     * @param proxyClass the proxy class to wrap instances in; may be {@code null}
+     * @return {@code true} if instances of {@code targetType} can be wrapped in the given proxy class
+     * @throws TargetNotFoundException if the proxy's target class could not be resolved
      */
-    static boolean canWrap(Class<?> subjectClass, Class<?> proxyClass) {
-        if (subjectClass == null || !isProxyClass(proxyClass))
+    static boolean canWrap(Class<?> targetType, Class<?> proxyClass) {
+        if (targetType == null || !isProxyClass(proxyClass))
             return false;
 
         try {
             Class<?> targetClass = getTargetClass(proxyClass);
-            return targetClass.isAssignableFrom(subjectClass);
-        } catch (RuntimeReflectiveOperationException e) {
+            return targetClass.isAssignableFrom(targetType);
+        } catch (TargetNotFoundException e) {
             throw e;
         } catch (Exception e) {
             return false;
@@ -329,9 +328,9 @@ public interface ProxyUtil {
      * @param proxyClass the proxy class to resolve the target class for; must not be {@code null}
      * @return the resolved target class
      * @throws IllegalArgumentException if {@code proxyClass} is not a proxy class
-     * @throws RuntimeReflectiveOperationException      if the target class could not be found on the classpath
+     * @throws TargetNotFoundException  if the target class could not be found on the classpath
      */
-    static Class<?> getTargetClass(Class<?> proxyClass) throws RuntimeReflectiveOperationException {
+    static Class<?> getTargetClass(Class<?> proxyClass) throws TargetNotFoundException {
         try {
             Proxy annotation = proxyClass.getDeclaredAnnotation(Proxy.class);
             if (annotation != null) {
@@ -347,7 +346,7 @@ public interface ProxyUtil {
                 throw new IllegalArgumentException("Class is not a proxy.");
             }
         } catch (ClassNotFoundException e) {
-            throw new RuntimeReflectiveOperationException(e);
+            throw new TargetNotFoundException(e);
         }
     }
 

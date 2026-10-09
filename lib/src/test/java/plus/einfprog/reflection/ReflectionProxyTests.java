@@ -11,14 +11,14 @@ import plus.einfprog.proxy.ProxyUtil;
 
 import static plus.einfprog.reflection.Reflected.on;
 
-class ReflectionProxyTest {
+class ReflectionProxyTests {
 
     @RegisterExtension
-    private static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault()
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault()
             .withFormatter(JsonTraceFormatter::new)
             .withCollector(LinearEventHistory::new);
 
-    private static final String FOO_CLASS_NAME = "plus.einfprog.reflection.ReflectionProxyTest$Foo";
+    private static final String FOO_CLASS_NAME = "plus.einfprog.reflection.ReflectionProxyTests$Foo";
 
     @SuppressWarnings("unused")
     public static class Foo {

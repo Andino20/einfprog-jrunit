@@ -1,6 +1,7 @@
 package plus.einfprog.io;
 
 import plus.einfprog.EinfprogJRunit;
+import plus.einfprog.exception.OutputMismatchException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,7 +20,7 @@ public final class IOAssertions {
     public static void assertOutput(String expected) {
         String s = consumeOutputBuffer();
         if (!s.equals(expected)) {
-            throw EinfprogJRunitAssertionError.builder()
+            throw OutputMismatchException.builder()
                     .actual(s)
                     .expected(expected)
                     .message("Output was not as expected")

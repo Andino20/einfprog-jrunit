@@ -2,7 +2,6 @@ package plus.einfprog.junit;
 
 import lombok.AllArgsConstructor;
 import lombok.With;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -38,7 +37,7 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
     private Settings settings;
 
     @Override
-    public void beforeEach(@NonNull ExtensionContext context) {
+    public void beforeEach(ExtensionContext context) {
         EinfprogJRunit.clearContext();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -66,7 +65,7 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
     }
 
     @Override
-    public void handleTestExecutionException(@NonNull ExtensionContext context, @NonNull Throwable throwable) throws Throwable {
+    public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
         InvocationEventCollector eventCollector = EinfprogJRunit.getContext().eventCollector();
         eventCollector.event(new ExceptionEvent(throwable));
 

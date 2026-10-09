@@ -1,4 +1,4 @@
-package plus.einfprog.pipeline.dto;
+package plus.einfprog.pipeline;
 
 import lombok.Builder;
 import lombok.NonNull;

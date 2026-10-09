@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
-import plus.einfprog.pipeline.dto.Invocation;
 
 import java.util.List;
 import java.util.UUID;
@@ -63,7 +62,7 @@ class InvocationPipelineTests {
                 .target(new Foo("foo"))
                 .build();
 
-        Assertions.assertThrows(RuntimeReflectiveOperationException.class, () -> InvocationPipeline.empty().run(invocation));
+        Assertions.assertThrows(IllegalStateException.class, () -> InvocationPipeline.empty().run(invocation));
     }
 
 }

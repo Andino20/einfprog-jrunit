@@ -17,7 +17,7 @@ import plus.einfprog.reflection.Reflected;
 public class TextFeedbackTests {
 
     @RegisterExtension
-    static EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault()
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault()
             .withFormatter(TextTraceFormatter::new);
 
     @Test

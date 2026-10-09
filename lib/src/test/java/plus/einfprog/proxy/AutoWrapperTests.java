@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
-import plus.einfprog.pipeline.dto.Invocation;
-import plus.einfprog.pipeline.dto.InvocationResult;
-import plus.einfprog.pipeline.intercepter.ProxyAutoWrapper;
+import plus.einfprog.pipeline.Invocation;
+import plus.einfprog.pipeline.InvocationResult;
+import plus.einfprog.pipeline.hook.ProxyAutoWrapper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -73,7 +73,7 @@ class AutoWrapperTests {
                 .withTarget(new Foo());
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
-        Invocation unwrappedCall = w.intercept(call);
+        Invocation unwrappedCall = w.apply(call);
 
         Assertions.assertEquals(call.id(), unwrappedCall.id());
         Assertions.assertEquals(call.target(), unwrappedCall.target());
@@ -88,13 +88,13 @@ class AutoWrapperTests {
                 .withArguments(List.of())
                 .withTargetClass(target.getClass())
                 .withTarget(target);
-        call = w.intercept(call);
+        call = w.apply(call);
 
         InvocationResult result = new InvocationResult(
                 call.id(),
                 call,
                 target);
-        result = w.intercept(result);
+        result = w.apply(result);
 
         Assertions.assertInstanceOf(FooProxy.class, result.returnValue());
     }
@@ -110,7 +110,7 @@ class AutoWrapperTests {
                 .withTarget(new Foo());
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
-        Invocation unwrappedCall = w.intercept(call);
+        Invocation unwrappedCall = w.apply(call);
 
         Assertions.assertEquals(List.of(args.getClass()), unwrappedCall.parameterTypes());
         Assertions.assertInstanceOf(Foo[].class, unwrappedCall.arguments().getFirst());
@@ -133,7 +133,7 @@ class AutoWrapperTests {
                 .withTarget(new Foo());
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
-        Invocation unwrappedCall = w.intercept(call);
+        Invocation unwrappedCall = w.apply(call);
 
         Assertions.assertEquals(List.of(args.getClass()), unwrappedCall.parameterTypes());
         Assertions.assertInstanceOf(Foo[][].class, unwrappedCall.arguments().getFirst());
@@ -155,7 +155,7 @@ class AutoWrapperTests {
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
         AtomicReference<Invocation> unwrappedCallReference = new AtomicReference<>();
-        Assertions.assertDoesNotThrow(() -> unwrappedCallReference.set(w.intercept(call)));
+        Assertions.assertDoesNotThrow(() -> unwrappedCallReference.set(w.apply(call)));
 
         Invocation unwrappedCall = unwrappedCallReference.get();
         Assertions.assertNotNull(unwrappedCall.arguments());
@@ -173,10 +173,10 @@ class AutoWrapperTests {
                 .withTarget(f);
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
-        call = w.intercept(call);
+        call = w.apply(call);
 
         InvocationResult result = new InvocationResult(call.id(), call, f.getSelfArray());
-        result = w.intercept(result);
+        result = w.apply(result);
 
         Assertions.assertNotNull(result.returnValue());
         Assertions.assertTrue(result.returnValue().getClass().isArray());
@@ -192,10 +192,10 @@ class AutoWrapperTests {
                 .withTarget(f);
 
         ProxyAutoWrapper w = new ProxyAutoWrapper();
-        call = w.intercept(call);
+        call = w.apply(call);
 
         InvocationResult result = new InvocationResult(call.id(), call, f.getSelfMultiArray());
-        result = w.intercept(result);
+        result = w.apply(result);
 
         Assertions.assertNotNull(result.returnValue());
         Assertions.assertTrue(result.returnValue().getClass().isArray());
