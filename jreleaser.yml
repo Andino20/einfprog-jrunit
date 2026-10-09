@@ -30,8 +30,3 @@ deploy:
         url: "https://central.sonatype.com/api/v1/publisher"
         stagingRepositories:
           - lib/build/staging-deploy
-
-distributions:
-  app:
-    artifacts:
-      - path: path/to/{{distributionName}}-{{projectVersion}}.zip
