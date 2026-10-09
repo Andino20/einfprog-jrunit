@@ -16,12 +16,12 @@ import java.util.Objects;
  * This is done by invoking the {@link InvocationPipeline}
  * with the information and arguments provided by the method call.
  */
-public class ProxyDelegate implements TargetInvocationHandler {
+class ProxyDelegate implements TargetInvocationHandler {
 
     private final Object target;
     private final InvocationPipeline pipeline;
 
-    public static <T> T create(Class<T> proxyClass, Object target) {
+    static <T> T create(Class<T> proxyClass, Object target) {
         ProxyDelegate handler = new ProxyDelegate(target, EinfprogJRunit.getContext().pipeline());
         Object proxy = java.lang.reflect.Proxy.newProxyInstance(proxyClass.getClassLoader(), new Class<?>[]{proxyClass}, handler);
         return proxyClass.cast(proxy);
