@@ -32,6 +32,13 @@ jobs:
         run: |
           sed -i "s/^version=.*/version=${{ github.event.inputs.version }}/" gradle.properties
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Build the artifacts
+      - name: Build & Stage
+        run: ./gradlew build :lib:publish
+
       - name: Commit release version
         run: |
           git config user.name "github-actions"
@@ -41,13 +48,6 @@ jobs:
       - name: Push
         if: ${{ !inputs.dry-run }}
         run: git push
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-
-      # Build the artifacts
-      - name: Build & Stage
-        run: ./gradlew build :lib:publish
 
       # Create a release
       - name: Run JReleaser
