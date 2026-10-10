@@ -130,4 +130,4 @@ Please make sure to update tests as appropriate. Run all tests with:
 ```
 
 ## License
-Apache-2.0
+MIT

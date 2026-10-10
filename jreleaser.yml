@@ -4,7 +4,7 @@ project:
   description: A Java unit-testing framework utilizing reflection and dynamic proxies, built on Junit 6.
   authors:
     - Andreas Schlager
-  license: Apache-2.0
+  license: MIT
   links:
     homepage: https://github.com/Andino20/einfprog-jrunit
   languages:
