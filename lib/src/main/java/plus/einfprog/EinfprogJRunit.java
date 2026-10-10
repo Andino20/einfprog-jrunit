@@ -15,6 +15,8 @@ public class EinfprogJRunit {
     }
 
     public static Context getContext() {
+        if (context == null)
+            throw new IllegalStateException("No active test context. Register EinfprogJRunitExtension with @RegisterExtension and create proxies inside a test.");
         return context;
     }
 
