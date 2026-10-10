@@ -3,6 +3,7 @@ package plus.einfprog.reflection;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import plus.einfprog.exception.TargetNotFoundException;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 
 import static plus.einfprog.reflection.Reflected.on;
@@ -32,7 +33,6 @@ class ReflectionTests {
         public static void accept(Object o) {
 
         }
-
     }
 
     @Test
@@ -55,7 +55,14 @@ class ReflectionTests {
 
     @Test
     void testNullAsArgument() {
-        Assertions.assertDoesNotThrow(() -> on(FOO_CLASS_NAME).call("accept", (Object) null).get());
+        Assertions.assertDoesNotThrow(() -> on(FOO_CLASS_NAME).call("accept", (Object) null));
+    }
+
+    @Test
+    void chainOnAssumedNonVoidShouldThrowIfVoid() {
+        Assertions.assertThrows(TargetNotFoundException.class, () -> on(FOO_CLASS_NAME).call("accept", (Object) null).get());
+        Assertions.assertThrows(TargetNotFoundException.class, () -> on(FOO_CLASS_NAME).call("accept", (Object) null).as(Object.class));
+        Assertions.assertThrows(TargetNotFoundException.class, () -> on(FOO_CLASS_NAME).call("accept", (Object) null).call("something"));
     }
 
 }

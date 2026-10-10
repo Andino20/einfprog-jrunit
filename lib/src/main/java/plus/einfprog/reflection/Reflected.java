@@ -4,6 +4,7 @@ import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.exception.TargetNotFoundException;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.Invocation;
+import plus.einfprog.pipeline.InvocationResult;
 import plus.einfprog.proxy.ProxyUtil;
 
 import java.util.Arrays;
@@ -27,6 +28,8 @@ public class Reflected {
     private final Class<?> type;
     private final Object target;
     private final boolean isStatic;
+    // the invocation of a void method this result came from, or null if there is a value
+    private final Invocation voidInvocation;
 
     private Reflected(String className) throws TargetNotFoundException {
         try {
@@ -36,12 +39,21 @@ public class Reflected {
         }
         this.target = null;
         this.isStatic = true;
+        this.voidInvocation = null;
     }
 
     private Reflected(Object target) {
         this.target = target;
         this.type = typeOf(target);
         this.isStatic = false;
+        this.voidInvocation = null;
+    }
+
+    private Reflected(Invocation voidInvocation) {
+        this.target = null;
+        this.type = null;
+        this.isStatic = false;
+        this.voidInvocation = voidInvocation;
     }
 
     public static Reflected on(String className) throws TargetNotFoundException {
@@ -58,6 +70,8 @@ public class Reflected {
     }
 
     public Reflected call(String method, Class<?>[] types, Object... args) {
+        if (voidInvocation != null)
+            throw TargetNotFoundException.voidResult(voidInvocation);
         if (types == null)
             throw new IllegalArgumentException("Types cannot be null");
 
@@ -71,7 +85,11 @@ public class Reflected {
                 .targetClass(type)
                 .target(target)
                 .build();
-        return new Reflected(pipeline.run(invocation).returnValue());
+        InvocationResult result = pipeline.run(invocation);
+        if (result.invocation().returnType().equals(Void.TYPE)) {
+            return new Reflected(result.invocation());
+        }
+        return new Reflected(result.returnValue());
     }
 
     public Reflected create(Object... args) {
@@ -90,10 +108,16 @@ public class Reflected {
 
     @SuppressWarnings("TypeParameterUnusedInFormals")
     public <T> T get() {
+        if (voidInvocation != null) {
+            throw TargetNotFoundException.voidResult(voidInvocation);
+        }
         return (T) target;
     }
 
     public <T> T as(Class<T> proxyClass) {
+        if (voidInvocation != null) {
+            throw TargetNotFoundException.voidResult(voidInvocation);
+        }
         if (!ProxyUtil.isProxyClass(proxyClass))
             throw new IllegalArgumentException("Argument has to be an interface with an @Proxy annotation");
         if (isStatic)
