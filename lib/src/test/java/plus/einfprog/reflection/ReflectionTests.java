@@ -29,6 +29,10 @@ class ReflectionTests {
             return a + b;
         }
 
+        public static void accept(Object o) {
+
+        }
+
     }
 
     @Test
@@ -47,6 +51,11 @@ class ReflectionTests {
 
         result = on(FOO_CLASS_NAME).call("add2", new Class[]{Integer.class, Integer.class}, Integer.valueOf(2), Integer.valueOf(3)).get();
         Assertions.assertEquals(5, result);
+    }
+
+    @Test
+    void testNullAsArgument() {
+        Assertions.assertDoesNotThrow(() -> on(FOO_CLASS_NAME).call("accept", (Object) null).get());
     }
 
 }
