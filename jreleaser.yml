@@ -1,7 +1,7 @@
 # Generated with JReleaser 1.26.0
 project:
   name: einfprog-jrunit
-  description: A Java unit-testing framework utilizing reflection and dynamic proxies, built on Junit 6.
+  description: A Java unit-testing framework utilizing reflection and dynamic proxies, built on JUnit 6.
   authors:
     - Andreas Schlager
   license: MIT

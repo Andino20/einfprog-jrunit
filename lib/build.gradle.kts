@@ -55,7 +55,7 @@ publishing {
             pom {
                 name = "einfprog-jrunit"
                 description =
-                    "A Java unit-testing framework utilizing reflection and dynamic proxies, built on Junit 6."
+                    "A Java unit-testing framework utilizing reflection and dynamic proxies, built on JUnit 6."
                 url = "https://github.com/Andino20/einfprog-jrunit"
 
                 licenses {
