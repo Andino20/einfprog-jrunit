@@ -2,10 +2,11 @@ package plus.einfprog.junit;
 
 import lombok.AllArgsConstructor;
 import lombok.With;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
+import org.opentest4j.AssertionFailedError;
+import org.opentest4j.TestAbortedException;
 import plus.einfprog.Context;
 import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.Settings;
@@ -66,12 +67,23 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
 
     @Override
     public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        // A failed assumption means "skip this test", not "this test failed".
+        if (throwable instanceof TestAbortedException) {
+            throw throwable;
+        }
+
         InvocationEventCollector eventCollector = EinfprogJRunit.getContext().eventCollector();
         eventCollector.event(new ExceptionEvent(throwable));
 
         TraceFormatter traceFormatter = EinfprogJRunit.getContext().traceFormatter();
-        Assertions.fail(traceFormatter.format(eventCollector.getTrace()));
-        throw throwable;
+        String message = traceFormatter.format(eventCollector.getTrace());
+
+        // Carry the expected/actual values over so IDEs can still offer their difference viewer.
+        if (throwable instanceof AssertionFailedError failure
+                && failure.isExpectedDefined() && failure.isActualDefined()) {
+            throw new AssertionFailedError(message, failure.getExpected(), failure.getActual(), throwable);
+        }
+        throw new AssertionFailedError(message, throwable);
     }
 
     public Context getContext() {
