@@ -5,9 +5,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import plus.einfprog.io.Token;
 import plus.einfprog.io.diff.Diff;
-import plus.einfprog.io.diff.Edit;
-
-import java.util.List;
 
 /**
  * Thrown when the captured console output does not match the expected output.
