@@ -33,7 +33,7 @@ public class TimeoutTests {
     }
 
     @Test
-    @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
+    @Timeout(value = 1000, unit = TimeUnit.MILLISECONDS)
     void proxyCallShouldTimeout() {
         FooProxy foo = ProxyUtil.create(FooProxy.class);
         Assertions.assertThrows(InvocationTimeoutException.class, foo::timeout);

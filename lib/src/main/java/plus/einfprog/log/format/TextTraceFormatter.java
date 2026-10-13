@@ -4,6 +4,9 @@ import plus.einfprog.exception.InvocationTimeoutException;
 import plus.einfprog.exception.OutputMismatchException;
 import plus.einfprog.exception.TargetInvocationException;
 import plus.einfprog.exception.TargetNotFoundException;
+import plus.einfprog.io.Token;
+import plus.einfprog.io.diff.Edit;
+import plus.einfprog.io.diff.EditType;
 import plus.einfprog.log.event.*;
 
 import java.util.HashMap;
@@ -108,9 +111,7 @@ public class TextTraceFormatter implements TraceFormatter {
             case TargetInvocationException e when e.getCause() != null -> describeTargetException(e.getCause());
             case InvocationTimeoutException _ ->
                     "Your code took too long and was stopped.\nCheck for a loop that never ends.";
-            case OutputMismatchException e -> "Your program printed something else than the test expected.\n"
-                    + "Expected output:\n" + output(e.getExpected()) + "\n"
-                    + "Actual output:\n" + output(e.getActual());
+            case OutputMismatchException e -> describeOutputMismatch(e);
             case AssertionError e -> "The test expected something else:\n" + indent(message(e), INDENT);
             case TargetNotFoundException e -> describeTargetNotFound(e);
             case null -> "Unknown error.";
@@ -139,6 +140,50 @@ public class TextTraceFormatter implements TraceFormatter {
         return "The test could not find something it needs in your code:\n"
                 + INDENT + message(detail) + "\n"
                 + "Check that the name, parameter types and return type are exactly as required.";
+    }
+
+    private static String describeOutputMismatch(OutputMismatchException exception) {
+        String description = "Your program printed something else than the test expected.\n";
+        if (exception.getDiff() == null) {
+            return description
+                    + "Expected output:\n" + output(exception.getExpected()) + "\n"
+                    + "Actual output:\n" + output(exception.getActual());
+        }
+
+        String actual = exception.getActual();
+        List<Edit<Token>> edits = exception.getDiff().getEdits();
+        int first = IntStream.range(0, edits.size())
+                .filter(i -> edits.get(i).type() != EditType.MATCH)
+                .findFirst().orElseThrow();
+        Token token = edits.get(first).value();
+
+        int start;
+        String marker;
+        if (edits.get(first).type() == EditType.INSERT) {
+            // the missing token only has a position in the expected output, so point at
+            // the next token the program did print (or the end of its output)
+            start = edits.stream().skip(first)
+                    .filter(e -> e.type() != EditType.INSERT)
+                    .findFirst()
+                    .map(e -> e.value().index())
+                    .orElse(actual.stripTrailing().length());
+            marker = "^ missing: " + token.value();
+        } else {
+            start = token.index();
+            marker = "^".repeat(token.length()) + " not expected";
+            if (first + 1 < edits.size()) {
+                Edit<Token> next = edits.get(first + 1);
+                if (next.type() == EditType.INSERT) {
+                    marker += ", expected: " + next.value().value();
+                }
+            }
+        }
+
+        // show the line of the mismatch with the marker underneath
+        int lineStart = actual.lastIndexOf('\n', start - 1) + 1;
+        int lineEnd = actual.indexOf('\n', start);
+        String line = actual.substring(lineStart, lineEnd == -1 ? actual.length() : lineEnd);
+        return description + line + "\n" + " ".repeat(start - lineStart) + marker;
     }
 
     private static String output(String output) {

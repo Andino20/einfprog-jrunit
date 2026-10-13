@@ -41,6 +41,33 @@ public class TextFeedbackTests {
     }
 
     @Test
+    void missingWordInOutputTest() {
+        ProgramProxy proxy = ProxyUtil.create(ProgramProxy.class);
+        proxy.helloWorld();
+        IOAssertions.assertOutputLoosely("Hello Java World!");
+    }
+
+    @Test
+    void unexpectedWordInOutputTest() {
+        ProgramProxy proxy = ProxyUtil.create(ProgramProxy.class);
+        proxy.helloWorld();
+        IOAssertions.assertOutputLoosely("Hello!");
+    }
+
+    @Test
+    void wrongNumberInOutputTest() {
+        ProgramProxy proxy = ProxyUtil.create(ProgramProxy.class);
+        IO.println("2 + 2 = " + proxy.add(2, 2));
+        IOAssertions.assertOutputLoosely("2 + 2 = 5");
+    }
+
+    @Test
+    void wordReplacedInOutputTest() {
+        IO.println("Hello James!");
+        IOAssertions.assertOutputLoosely("Hello Sam!");
+    }
+
+    @Test
     void missingMethodTest() {
         Reflected.on("Program").call("subtract", 2, 1);
     }

@@ -18,6 +18,13 @@ public class IOTests {
     }
 
     @Test
+    void assertConsoleOutputLooselyTest() {
+        // words, numbers and symbols are compared, whitespace is ignored
+        IO.println("Hello,   World!");
+        IOAssertions.assertOutputLoosely("Hello, World!");
+    }
+
+    @Test
     @Tag("failing")
     void feedbackConsoleOutputTest() {
         IO.println("Foo");

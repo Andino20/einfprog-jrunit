@@ -2,10 +2,13 @@ package plus.einfprog.io;
 
 import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.exception.OutputMismatchException;
+import plus.einfprog.io.diff.Diff;
+import plus.einfprog.io.diff.MyersAlgorithm;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * Utility class providing assertion and setup methods for testing console input/output (I/O).
@@ -23,6 +26,25 @@ public final class IOAssertions {
             throw OutputMismatchException.builder()
                     .actual(s)
                     .expected(expected)
+                    .message("Output was not as expected")
+                    .build();
+        }
+    }
+
+    public static void assertOutputLoosely(String expected) {
+        String actual = consumeOutputBuffer();
+
+        List<Token> expectedTokens = new Tokenizer(expected).tokenize();
+        List<Token> actualTokens = new Tokenizer(actual).tokenize();
+
+        double epsilon = EinfprogJRunit.getContext().settings().getEpsilon();
+        Diff<Token> diff = new MyersAlgorithm<Token>((a, e) -> Token.matches(a, e, epsilon))
+                .computeDiff(actualTokens, expectedTokens);
+        if (diff.hasMismatches()) {
+            throw OutputMismatchException.builder()
+                    .actual(actual)
+                    .expected(expected)
+                    .diff(diff)
                     .message("Output was not as expected")
                     .build();
         }

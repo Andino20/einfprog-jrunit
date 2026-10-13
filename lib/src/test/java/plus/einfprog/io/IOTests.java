@@ -3,6 +3,7 @@ package plus.einfprog.io;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import plus.einfprog.exception.OutputMismatchException;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 
 import java.lang.IO;
@@ -21,6 +22,27 @@ public class IOTests {
 
         IO.println("My first Java program");
         IOAssertions.assertOutput("My first Java program" + System.lineSeparator());
+    }
+
+    @Test
+    void looseOutputTest() {
+        IO.println("x = 3");
+        IOAssertions.assertOutputLoosely("x = 3");
+
+        IO.println("x = 10");
+        Assertions.assertThrows(OutputMismatchException.class, () -> IOAssertions.assertOutputLoosely("x = 3"));
+    }
+
+    @Test
+    void looseOutputComparesNumbersByValue() {
+        IO.println("x = 3");
+        IOAssertions.assertOutputLoosely("x = 3.0");
+
+        IO.println(0.1 + 0.2);
+        IOAssertions.assertOutputLoosely("0.3");
+
+        IO.println("x = -3");
+        Assertions.assertThrows(OutputMismatchException.class, () -> IOAssertions.assertOutputLoosely("x = 3"));
     }
 
     @Test
