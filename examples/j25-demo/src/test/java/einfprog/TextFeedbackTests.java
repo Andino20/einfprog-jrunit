@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.io.IOAssertions;
+import plus.einfprog.io.Input;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.log.format.TextTraceFormatter;
 import plus.einfprog.proxy.ProxyUtil;
@@ -65,6 +66,13 @@ public class TextFeedbackTests {
     void wordReplacedInOutputTest() {
         IO.println("Hello James!");
         IOAssertions.assertOutputLoosely("Hello Sam!");
+    }
+
+    @Test
+    void wrongOutputWithInputTest() {
+        Input in = Input.of(2.0, 3.0);
+        IO.println("2.0 + 3.0 = 4.0");
+        IOAssertions.assertOutputLoosely("2.0 + 3.0 = 5.0", in);
     }
 
     @Test

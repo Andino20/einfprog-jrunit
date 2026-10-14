@@ -3,6 +3,7 @@ package plus.einfprog.exception;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import plus.einfprog.io.Input;
 import plus.einfprog.io.Token;
 import plus.einfprog.io.diff.Diff;
 
@@ -16,5 +17,6 @@ public class OutputMismatchException extends EinfprogJRunitException {
     private final String actual;
     private final String expected;
     private final String message;
+    private final Input input;
     private final Diff<Token> diff;
 }

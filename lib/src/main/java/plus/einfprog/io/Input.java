@@ -2,6 +2,7 @@ package plus.einfprog.io;
 
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  * Represents structured console input for testing purposes.
  * <p>
@@ -47,6 +48,10 @@ public class Input {
         public Input build() {
             return in;
         }
+    }
+
+    public List<Object> get() {
+        return inputs;
     }
 
     @Override

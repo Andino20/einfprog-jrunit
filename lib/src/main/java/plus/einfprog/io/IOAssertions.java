@@ -21,17 +21,26 @@ public final class IOAssertions {
     }
 
     public static void assertOutput(String expected) {
+        assertOutput(expected, null);
+    }
+
+    public static void assertOutput(String expected, Input input) {
         String s = consumeOutputBuffer();
         if (!s.equals(expected)) {
             throw OutputMismatchException.builder()
                     .actual(s)
                     .expected(expected)
+                    .input(input)
                     .message("Output was not as expected")
                     .build();
         }
     }
 
     public static void assertOutputLoosely(String expected) {
+        assertOutputLoosely(expected, null);
+    }
+
+    public static void assertOutputLoosely(String expected, Input input) {
         String actual = consumeOutputBuffer();
 
         List<Token> expectedTokens = new Tokenizer(expected).tokenize();
@@ -44,6 +53,7 @@ public final class IOAssertions {
             throw OutputMismatchException.builder()
                     .actual(actual)
                     .expected(expected)
+                    .input(input)
                     .diff(diff)
                     .message("Output was not as expected")
                     .build();

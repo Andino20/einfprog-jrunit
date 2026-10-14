@@ -4,6 +4,7 @@ import plus.einfprog.exception.InvocationTimeoutException;
 import plus.einfprog.exception.OutputMismatchException;
 import plus.einfprog.exception.TargetInvocationException;
 import plus.einfprog.exception.TargetNotFoundException;
+import plus.einfprog.io.Input;
 import plus.einfprog.io.Token;
 import plus.einfprog.io.diff.Edit;
 import plus.einfprog.io.diff.EditType;
@@ -144,12 +145,16 @@ public class TextTraceFormatter implements TraceFormatter {
 
     private static String describeOutputMismatch(OutputMismatchException exception) {
         String description = "Your program printed something else than the test expected.\n";
+        if (exception.getInput() != null) {
+            String inputDescription = describeInput(exception.getInput());
+            description += inputDescription;
+        }
         if (exception.getDiff() == null) {
             return description
                     + "Expected output:\n" + output(exception.getExpected()) + "\n"
                     + "Actual output:\n" + output(exception.getActual());
         }
-
+        description += "Your program printed:\n";
         String actual = exception.getActual();
         List<Edit<Token>> edits = exception.getDiff().getEdits();
         int first = IntStream.range(0, edits.size())
@@ -184,6 +189,13 @@ public class TextTraceFormatter implements TraceFormatter {
         int lineEnd = actual.indexOf('\n', start);
         String line = actual.substring(lineStart, lineEnd == -1 ? actual.length() : lineEnd);
         return description + line + "\n" + " ".repeat(start - lineStart) + marker;
+    }
+
+    private static String describeInput(Input input) {
+        return "Input: [" + String.join(", ", input.get().stream()
+                .map(o -> '"' + o.toString() + '"')
+                .toList()) +
+                "]\n";
     }
 
     private static String output(String output) {
