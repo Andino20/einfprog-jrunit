@@ -46,6 +46,20 @@ public class IOTests {
     }
 
     @Test
+    void looseOutputAllowsExtraTrailingOutput() {
+        IO.println("x = 3");
+        IO.println("Goodbye!");
+        IOAssertions.assertOutputLoosely("x = 3");
+
+        IO.println("Hello!");
+        IO.println("x = 3");
+        Assertions.assertThrows(OutputMismatchException.class, () -> IOAssertions.assertOutputLoosely("x = 3"));
+
+        IO.println("x =");
+        Assertions.assertThrows(OutputMismatchException.class, () -> IOAssertions.assertOutputLoosely("x = 3"));
+    }
+
+    @Test
     void inputTest() {
         IOAssertions.prepareInput(Input.of("Hello world!", 42));
 

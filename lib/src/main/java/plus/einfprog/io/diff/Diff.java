@@ -17,4 +17,14 @@ public class Diff<T> {
     public boolean hasMismatches() {
         return edits.stream().anyMatch(e -> e.type() != EditType.MATCH);
     }
+
+    /**
+     * Like {@link #hasMismatches()}, but ignores deletions at the very end, i.e. extra elements after
+     * everything else matched.
+     */
+    public boolean hasMismatchesIgnoringTrailingDeletes() {
+        return edits.reversed().stream()
+                .dropWhile(e -> e.type() == EditType.DELETE)
+                .anyMatch(e -> e.type() != EditType.MATCH);
+    }
 }

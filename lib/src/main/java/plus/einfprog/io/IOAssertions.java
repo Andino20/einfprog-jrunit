@@ -49,7 +49,8 @@ public final class IOAssertions {
         double epsilon = EinfprogJRunit.getContext().settings().getEpsilon();
         Diff<Token> diff = new MyersAlgorithm<Token>((a, e) -> Token.matches(a, e, epsilon))
                 .computeDiff(actualTokens, expectedTokens);
-        if (diff.hasMismatches()) {
+        // extra output after the expected output is allowed
+        if (diff.hasMismatchesIgnoringTrailingDeletes()) {
             throw OutputMismatchException.builder()
                     .actual(actual)
                     .expected(expected)
