@@ -68,6 +68,11 @@ public class TokenizerTests {
     }
 
     @Test
+    void shouldReturnEmptyListForEmptyString() {
+        Assertions.assertEquals(List.of(), new Tokenizer("").tokenize());
+    }
+
+    @Test
     void shouldThrowOnNullInputString() {
         Assertions.assertThrows(NullPointerException.class, () -> new Tokenizer(null).tokenize());
     }

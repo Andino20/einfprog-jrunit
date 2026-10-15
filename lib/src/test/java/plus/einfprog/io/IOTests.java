@@ -22,6 +22,9 @@ public class IOTests {
 
         IO.println("My first Java program");
         IOAssertions.assertOutput("My first Java program" + System.lineSeparator());
+
+        IO.println("Hello C++!");
+        Assertions.assertThrows(OutputMismatchException.class, () -> IOAssertions.assertOutput("Hello Java!"));
     }
 
     @Test
