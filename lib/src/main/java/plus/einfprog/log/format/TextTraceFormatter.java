@@ -171,7 +171,7 @@ public class TextTraceFormatter implements TraceFormatter {
                     .findFirst()
                     .map(e -> e.value().index())
                     .orElse(actual.stripTrailing().length());
-            marker = "^ missing: " + token.value();
+            marker = "^ missing: \"" + token.value() + '"';
         } else {
             start = token.index();
             marker = "^".repeat(token.length()) + " not expected";
