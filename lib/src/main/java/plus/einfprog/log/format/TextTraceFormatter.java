@@ -179,7 +179,7 @@ public class TextTraceFormatter implements TraceFormatter {
             if (first + 1 < edits.size()) {
                 Edit<Token> next = edits.get(first + 1);
                 if (next.type() == EditType.INSERT) {
-                    marker += ", expected: " + next.value().value();
+                    marker += ", expected: \"" + next.value().value() + '"';
                 }
             }
         }
@@ -187,8 +187,8 @@ public class TextTraceFormatter implements TraceFormatter {
         // show the line of the mismatch with the marker underneath
         int lineStart = actual.lastIndexOf('\n', start - 1) + 1;
         int lineEnd = actual.indexOf('\n', start);
-        String line = actual.substring(lineStart, lineEnd == -1 ? actual.length() : lineEnd);
-        return description + line + "\n" + " ".repeat(start - lineStart) + marker;
+        String text = actual.substring(0, lineEnd == -1 ? actual.length() : lineEnd);
+        return description + text + "\n" + " ".repeat(start - lineStart) + marker;
     }
 
     private static String describeInput(Input input) {

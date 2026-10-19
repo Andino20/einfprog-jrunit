@@ -76,6 +76,12 @@ public class TextFeedbackTests {
     }
 
     @Test
+    void wrongOutputWithMultipleLines() {
+        IO.println("This is line 1\nFollowed by line 2\nHere an error");
+        IOAssertions.assertOutputLoosely("This is line 1\nFollowed by line 2\nHere is an error");
+    }
+
+    @Test
     void missingMethodTest() {
         Reflected.on("Program").call("subtract", 2, 1);
     }
