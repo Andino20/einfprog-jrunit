@@ -42,15 +42,8 @@ public final class IOAssertions {
 
     public static void assertOutputLoosely(String expected, Input input) {
         String actual = consumeOutputBuffer();
-
-        List<Token> expectedTokens = new Tokenizer(expected).tokenize();
-        List<Token> actualTokens = new Tokenizer(actual).tokenize();
-
-        double epsilon = EinfprogJRunit.getContext().settings().getEpsilon();
-        Diff<Token> diff = new MyersAlgorithm<Token>((a, e) -> Token.matches(a, e, epsilon))
-                .computeDiff(actualTokens, expectedTokens);
-        // extra output after the expected output is allowed
-        if (diff.hasMismatchesIgnoringTrailingDeletes()) {
+        Diff<Token> diff = computetTokenizedDiff(expected, actual);
+        if (diff.hasMismatches()) {
             throw OutputMismatchException.builder()
                     .actual(actual)
                     .expected(expected)
@@ -59,6 +52,32 @@ public final class IOAssertions {
                     .message("Output was not as expected")
                     .build();
         }
+    }
+
+    public static void assertOutputLooselyTrimmed(String expected) {
+        assertOutputLooselyTrimmed(expected, null);
+    }
+
+    public static void assertOutputLooselyTrimmed(String expected, Input input) {
+        String actual = consumeOutputBuffer();
+        Diff<Token> diff = computetTokenizedDiff(expected, actual);
+        if (diff.hasMismatchesIgnoringTrailingDeletes()) { // extra output after the expected output is allowed
+            throw OutputMismatchException.builder()
+                    .actual(actual)
+                    .expected(expected)
+                    .diff(diff)
+                    .message("Output was not as expected")
+                    .build();
+        }
+    }
+
+    private static Diff<Token> computetTokenizedDiff(String expected, String actual) {
+        List<Token> expectedTokens = new Tokenizer(expected).tokenize();
+        List<Token> actualTokens = new Tokenizer(actual).tokenize();
+
+        double epsilon = EinfprogJRunit.getContext().settings().getEpsilon();
+        return new MyersAlgorithm<Token>((a, e) -> Token.matches(a, e, epsilon))
+                .computeDiff(actualTokens, expectedTokens);
     }
 
     private static String consumeOutputBuffer() {
