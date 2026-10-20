@@ -65,6 +65,7 @@ public final class IOAssertions {
             throw OutputMismatchException.builder()
                     .actual(actual)
                     .expected(expected)
+                    .input(input)
                     .diff(diff)
                     .message("Output was not as expected")
                     .build();

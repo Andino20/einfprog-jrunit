@@ -25,10 +25,6 @@ int add(int a, int b) {
     return a + b;
 }
 
-void helloWorld() {
-    IO.println("Hello World!");
-}
-
 void thisThrows(Throwable t) throws Throwable {
     throw t;
 }
