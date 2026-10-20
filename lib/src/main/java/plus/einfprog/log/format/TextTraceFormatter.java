@@ -31,9 +31,16 @@ public class TextTraceFormatter implements TraceFormatter {
                 returnValues.put(e.id(), e.returnValue());
             }
         }
+        StringBuilder text = new StringBuilder("Test failed.\n");
+
+        StringBuilder errors = new StringBuilder();
+        InvocationEvent lastEvent = trace.getLast();
+        if (lastEvent instanceof ExceptionEvent e) {
+            errors.append(indent(describe(e.exception()))).append('\n');
+            text.append("\nWhat went wrong:\n").append(errors);
+        }
 
         StringBuilder calls = new StringBuilder();
-        StringBuilder errors = new StringBuilder();
         int step = 0;
         for (InvocationEvent event : trace) {
             switch (event) {
@@ -41,21 +48,13 @@ public class TextTraceFormatter implements TraceFormatter {
                         calls.append(formatCall(++step, methodCallToString(e), "returned", returnValues.get(e.id())));
                 case ConstructorCallEvent e ->
                         calls.append(formatCall(++step, constructorCallToString(e), "created", returnValues.get(e.id())));
-                case ExceptionEvent e -> errors.append(indent(describe(e.exception()), INDENT)).append('\n');
-                case InvocationReturnEvent _ -> {
-                }
-                case null -> {
-                }
+                default -> {}
             }
         }
-
-        StringBuilder text = new StringBuilder("Test failed.\n");
         if (!calls.isEmpty()) {
             text.append("\nCalls made to your code, in order:\n").append(calls);
         }
-        if (!errors.isEmpty()) {
-            text.append("\nWhat went wrong:\n").append(errors);
-        }
+
         return text.toString();
     }
 
@@ -113,7 +112,7 @@ public class TextTraceFormatter implements TraceFormatter {
             case InvocationTimeoutException _ ->
                     "Your code took too long and was stopped.\nCheck for a loop that never ends.";
             case OutputMismatchException e -> describeOutputMismatch(e);
-            case AssertionError e -> "The test expected something else:\n" + indent(message(e), INDENT);
+            case AssertionError e -> "The test expected something else:\n" + indent(message(e));
             case TargetNotFoundException e -> describeTargetNotFound(e);
             case null -> "Unknown error.";
             default -> throwable.getClass().getSimpleName() + ": " + message(throwable);
@@ -172,14 +171,14 @@ public class TextTraceFormatter implements TraceFormatter {
                     .findFirst()
                     .map(e -> e.value().index())
                     .orElse(actual.stripTrailing().length());
-            marker = "^ missing: " + token.value();
+            marker = "^ missing: \"" + token.value() + '"';
         } else {
             start = token.index();
             marker = "^".repeat(token.length()) + " not expected";
             if (first + 1 < edits.size()) {
                 Edit<Token> next = edits.get(first + 1);
                 if (next.type() == EditType.INSERT) {
-                    marker += ", expected: " + next.value().value();
+                    marker += ", expected: \"" + next.value().value() + '"';
                 }
             }
         }
@@ -187,8 +186,8 @@ public class TextTraceFormatter implements TraceFormatter {
         // show the line of the mismatch with the marker underneath
         int lineStart = actual.lastIndexOf('\n', start - 1) + 1;
         int lineEnd = actual.indexOf('\n', start);
-        String line = actual.substring(lineStart, lineEnd == -1 ? actual.length() : lineEnd);
-        return description + line + "\n" + " ".repeat(start - lineStart) + marker;
+        String text = actual.substring(0, lineEnd == -1 ? actual.length() : lineEnd);
+        return description + text + "\n" + " ".repeat(start - lineStart) + marker;
     }
 
     private static String describeInput(Input input) {
@@ -199,15 +198,15 @@ public class TextTraceFormatter implements TraceFormatter {
     }
 
     private static String output(String output) {
-        return indent(output == null || output.isEmpty() ? "(nothing)" : output, INDENT);
+        return indent(output == null || output.isEmpty() ? "(nothing)" : output);
     }
 
     private static String message(Throwable throwable) {
         return throwable.getMessage() == null ? "(no message)" : throwable.getMessage();
     }
 
-    private static String indent(String text, String indent) {
-        return text.lines().map(line -> indent + line).collect(Collectors.joining("\n"));
+    private static String indent(String text) {
+        return text.lines().map(line -> TextTraceFormatter.INDENT + line).collect(Collectors.joining("\n"));
     }
 
 }

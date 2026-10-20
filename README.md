@@ -116,6 +116,10 @@ void testGreeting() {
 `assertOutput` compares against everything printed since the last check and then clears the
 captured output. A mismatch throws an `OutputMismatchException`.
 
+`assertOutputLoosely` ignores whitespace and compares numbers by value (within `Settings.epsilon`),
+and `assertOutputLooselyTrimmed` additionally ignores anything printed after the expected output.
+See [`examples/io`](examples/io) for more.
+
 ### Errors and timeouts
 
 Exceptions thrown by the tested code are rethrown as `TargetInvocationException` (the original

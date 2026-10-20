@@ -6,3 +6,4 @@ rootProject.name = "einfprog-jrunit"
 include("lib")
 include("examples:proxy")
 include("examples:j25-demo")
+include("examples:io")

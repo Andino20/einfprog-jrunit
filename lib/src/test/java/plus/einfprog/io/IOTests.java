@@ -52,7 +52,7 @@ public class IOTests {
     void looseOutputAllowsExtraTrailingOutput() {
         IO.println("x = 3");
         IO.println("Goodbye!");
-        IOAssertions.assertOutputLoosely("x = 3");
+        IOAssertions.assertOutputLooselyTrimmed("x = 3");
 
         IO.println("Hello!");
         IO.println("x = 3");
