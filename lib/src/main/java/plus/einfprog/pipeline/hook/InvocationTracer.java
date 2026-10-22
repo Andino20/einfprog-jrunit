@@ -59,6 +59,7 @@ public class InvocationTracer implements BeforeHook, AfterHook {
         eventCollector.event(InvocationReturnEvent.builder()
                 .id(result.id().toString())
                 .returnValue(safeObjectToString(result.returnValue()))
+                .isVoid(result.invocation().executable() instanceof Method m && m.getReturnType() == void.class)
                 .build());
         return result;
     }

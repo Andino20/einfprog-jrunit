@@ -25,10 +25,10 @@ public class TextTraceFormatter implements TraceFormatter {
 
     @Override
     public String format(List<InvocationEvent> trace) {
-        Map<String, String> returnValues = new HashMap<>();
+        Map<String, InvocationReturnEvent> returns = new HashMap<>();
         for (InvocationEvent event : trace) {
             if (event instanceof InvocationReturnEvent e) {
-                returnValues.put(e.id(), e.returnValue());
+                returns.put(e.id(), e);
             }
         }
         StringBuilder text = new StringBuilder("Test failed.\n");
@@ -45,9 +45,9 @@ public class TextTraceFormatter implements TraceFormatter {
         for (InvocationEvent event : trace) {
             switch (event) {
                 case MethodCallEvent e ->
-                        calls.append(formatCall(++step, methodCallToString(e), "returned", returnValues.get(e.id())));
+                        calls.append(formatCall(++step, methodCallToString(e), "returned", returns.get(e.id())));
                 case ConstructorCallEvent e ->
-                        calls.append(formatCall(++step, constructorCallToString(e), "created", returnValues.get(e.id())));
+                        calls.append(formatCall(++step, constructorCallToString(e), "created", returns.get(e.id())));
                 default -> {}
             }
         }
@@ -58,9 +58,14 @@ public class TextTraceFormatter implements TraceFormatter {
         return text.toString();
     }
 
-    private static String formatCall(int step, String call, String verb, String returnValue) {
-        String outcome = returnValue == null ? "did not finish" : verb + " " + returnValue;
-        return "%s%2d. %s\n%s      -> %s\n".formatted(INDENT, step, call, INDENT, outcome);
+    private static String formatCall(int step, String call, String verb, InvocationReturnEvent returnEvent) {
+        String line = "%s%2d. %s\n".formatted(INDENT, step, call);
+        // void calls get no outcome line, so actual return values stand out
+        if (returnEvent != null && returnEvent.isVoid()) {
+            return line;
+        }
+        String outcome = returnEvent == null ? "did not finish" : verb + " " + returnEvent.returnValue();
+        return line + "%s      -> %s\n".formatted(INDENT, outcome);
     }
 
     private static String methodCallToString(MethodCallEvent event) {
