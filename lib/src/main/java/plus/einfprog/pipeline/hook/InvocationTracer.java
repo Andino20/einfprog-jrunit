@@ -1,5 +1,6 @@
 package plus.einfprog.pipeline.hook;
 
+import plus.einfprog.exception.TargetInvocationException;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.event.ConstructorCallEvent;
 import plus.einfprog.log.event.MethodCallEvent;
@@ -65,10 +66,13 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     private static String safeObjectToString(Object o) {
         if (o == null) {
             return "null";
-        } else if (o.getClass().isArray()) {
-            return Arrays.deepToString((Object[]) o);
         }
-        return o.toString();
+
+        try {
+            return o.getClass().isArray() ? Arrays.deepToString((Object[]) o) : o.toString();
+        } catch (Exception e) {
+            throw new TargetInvocationException("an exception occurred while invoking the toString method of an object", e);
+        }
     }
 
 }

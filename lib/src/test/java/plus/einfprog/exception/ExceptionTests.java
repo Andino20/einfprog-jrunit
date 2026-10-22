@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.proxy.Proxy;
 import plus.einfprog.proxy.ProxyUtil;
+import plus.einfprog.reflection.Reflected;
 
 public class ExceptionTests {
 
@@ -19,6 +20,14 @@ public class ExceptionTests {
         }
 
         public void wrongArguments() {
+        }
+    }
+
+    @SuppressWarnings("unused")
+    static class Bar {
+        @Override
+        public String toString() {
+            throw new RuntimeException("toString threw");
         }
     }
 
@@ -49,5 +58,15 @@ public class ExceptionTests {
         FooProxy foo = ProxyUtil.create(FooProxy.class);
         Assertions.assertThrows(TargetNotFoundException.class, foo::missingMethod);
         Assertions.assertThrows(TargetNotFoundException.class, () -> foo.wrongArguments(42));
+    }
+
+    @Test
+    void shouldWrapToStringException() {
+        TargetInvocationException e = Assertions.assertThrows(TargetInvocationException.class, () ->
+                Reflected.on("plus.einfprog.exception.ExceptionTests$Bar")
+                        .create()
+                        .call("toString"));
+        Assertions.assertEquals(RuntimeException.class, e.getCause().getClass());
+        Assertions.assertEquals("toString threw", e.getCause().getMessage());
     }
 }
