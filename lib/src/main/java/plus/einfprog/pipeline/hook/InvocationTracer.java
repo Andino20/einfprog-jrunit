@@ -9,6 +9,7 @@ import plus.einfprog.pipeline.InvocationResult;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * Converts {@link Invocation} to {@link MethodCallEvent} and {@link InvocationResult} to {@link InvocationReturnEvent}
@@ -62,7 +63,12 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     }
 
     private static String safeObjectToString(Object o) {
-        return o == null ? "null" : o.toString();
+        if (o == null) {
+            return "null";
+        } else if (o.getClass().isArray()) {
+            return Arrays.deepToString((Object[]) o);
+        }
+        return o.toString();
     }
 
 }
