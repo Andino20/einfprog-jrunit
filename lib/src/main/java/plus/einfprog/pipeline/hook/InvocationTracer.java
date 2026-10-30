@@ -1,5 +1,7 @@
 package plus.einfprog.pipeline.hook;
 
+import plus.einfprog.EinfprogJRunit;
+import plus.einfprog.exception.InvocationTimeoutException;
 import plus.einfprog.exception.TargetInvocationException;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.event.ConstructorCallEvent;
@@ -11,6 +13,7 @@ import plus.einfprog.pipeline.InvocationResult;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.concurrent.*;
 
 /**
  * Converts {@link Invocation} to {@link MethodCallEvent} and {@link InvocationResult} to {@link InvocationReturnEvent}
@@ -39,9 +42,9 @@ public class InvocationTracer implements BeforeHook, AfterHook {
                 .id(invocation.id().toString())
                 .method(invocation.name())
                 .types(invocation.parameterTypes().stream().map(Class::getSimpleName).toList())
-                .arguments(invocation.arguments().stream().map(InvocationTracer::safeObjectToString).toList())
+                .arguments(invocation.arguments().stream().map(InvocationTracer::safeObjectToStringTimeout).toList())
                 .clazz(invocation.targetClass())
-                .target(safeObjectToString(invocation.target()))
+                .target(safeObjectToStringTimeout(invocation.target()))
                 .build());
     }
 
@@ -50,7 +53,7 @@ public class InvocationTracer implements BeforeHook, AfterHook {
                 .id(invocation.id().toString())
                 .clazz(invocation.targetClass())
                 .types(invocation.parameterTypes())
-                .arguments(invocation.arguments().stream().map(InvocationTracer::safeObjectToString).toList())
+                .arguments(invocation.arguments().stream().map(InvocationTracer::safeObjectToStringTimeout).toList())
                 .build());
     }
 
@@ -58,10 +61,31 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     public InvocationResult apply(InvocationResult result) {
         eventCollector.event(InvocationReturnEvent.builder()
                 .id(result.id().toString())
-                .returnValue(safeObjectToString(result.returnValue()))
+                .returnValue(safeObjectToStringTimeout(result.returnValue()))
                 .isVoid(result.invocation().executable() instanceof Method m && m.getReturnType() == void.class)
                 .build());
         return result;
+    }
+
+    private static String safeObjectToStringTimeout(Object o) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<String> toStringResult = executor.submit(() -> safeObjectToString(o));
+
+        long timeout = EinfprogJRunit.getContext().settings().getTimeout();
+        TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
+        try {
+            return toStringResult.get(timeout, unit);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException r) {
+                throw r;
+            } else {
+                throw new RuntimeException("an unexpected error occurred", e);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("an unexpected error occurred", e);
+        } catch (TimeoutException e) {
+            throw new InvocationTimeoutException(e);
+        }
     }
 
     private static String safeObjectToString(Object o) {

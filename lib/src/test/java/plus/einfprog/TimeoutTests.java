@@ -27,9 +27,24 @@ public class TimeoutTests {
         }
     }
 
+    @SuppressWarnings("unused")
+    static class Bar {
+        @Override
+        public String toString() {
+            while (true)
+                ;
+        }
+    }
+
     @Proxy("plus.einfprog.TimeoutTests$Foo")
     interface FooProxy {
         void timeout();
+    }
+
+    @Proxy("plus.einfprog.TimeoutTests$Bar")
+    interface BarProxy {
+        @Override
+        String toString();
     }
 
     @Test
@@ -37,5 +52,11 @@ public class TimeoutTests {
     void proxyCallShouldTimeout() {
         FooProxy foo = ProxyUtil.create(FooProxy.class);
         Assertions.assertThrows(InvocationTimeoutException.class, foo::timeout);
+    }
+
+    @Test
+    @Timeout(value = 1000, unit = TimeUnit.MILLISECONDS)
+    void proxyToStringShouldTimeout() {
+        Assertions.assertThrows(InvocationTimeoutException.class, () -> ProxyUtil.create(BarProxy.class).toString());
     }
 }
