@@ -1,5 +1,7 @@
 package plus.einfprog.log.format;
 
+import org.opentest4j.AssertionFailedError;
+import org.opentest4j.ValueWrapper;
 import plus.einfprog.exception.InvocationTimeoutException;
 import plus.einfprog.exception.OutputMismatchException;
 import plus.einfprog.exception.TargetInvocationException;
@@ -22,6 +24,7 @@ import java.util.stream.IntStream;
 public class TextTraceFormatter implements TraceFormatter {
 
     private static final String INDENT = "  ";
+    private static final String SEPARATOR = "-".repeat(24);
 
     @Override
     public String format(List<InvocationEvent> trace) {
@@ -33,11 +36,9 @@ public class TextTraceFormatter implements TraceFormatter {
         }
         StringBuilder text = new StringBuilder("Test failed.\n");
 
-        StringBuilder errors = new StringBuilder();
         InvocationEvent lastEvent = trace.getLast();
         if (lastEvent instanceof ExceptionEvent e) {
-            errors.append(indent(describe(e.exception()))).append('\n');
-            text.append("\nWhat went wrong:\n").append(errors);
+            text.append("\nWhat went wrong:\n").append(describe(e.exception())).append('\n');
         }
 
         StringBuilder calls = new StringBuilder();
@@ -117,11 +118,29 @@ public class TextTraceFormatter implements TraceFormatter {
             case InvocationTimeoutException _ ->
                     "Your code took too long and was stopped.\nCheck for a loop that never ends.";
             case OutputMismatchException e -> describeOutputMismatch(e);
-            case AssertionError e -> "The test expected something else:\n" + indent(message(e));
+            case AssertionFailedError e when e.isExpectedDefined() && e.isActualDefined() -> describeWrongResult(e);
+            case AssertionError e -> "The test expected something else:\n" + message(e);
             case TargetNotFoundException e -> describeTargetNotFound(e);
             case null -> "Unknown error.";
             default -> throwable.getClass().getSimpleName() + ": " + message(throwable);
         };
+    }
+
+    private static String describeWrongResult(AssertionFailedError error) {
+        String description = "The test expected a different result:\n";
+        // JUnit puts a custom message in front of the values, e.g. "sum ==> expected: <5> but was: <4>"
+        int separator = message(error).indexOf(" ==> ");
+        if (separator != -1) {
+            description += message(error).substring(0, separator) + "\n";
+        }
+        return description
+                + "Expected: " + valueToString(error.getExpected()) + "\n"
+                + "Actual:   " + valueToString(error.getActual());
+    }
+
+    private static String valueToString(ValueWrapper value) {
+        String type = value.getType() == null ? "" : value.getType().getSimpleName();
+        return quote(type, value.getStringRepresentation());
     }
 
     private static String describeTargetException(Throwable cause) {
@@ -130,7 +149,7 @@ public class TextTraceFormatter implements TraceFormatter {
         for (StackTraceElement frame : cause.getStackTrace()) {
             // skip frames inside the JDK so the location points into the student's code
             if (!frame.getClassName().startsWith("java.") && !frame.getClassName().startsWith("jdk.")) {
-                return description + "\n" + INDENT + "at " + frame;
+                return description + "\n" + INDENT + INDENT + "at " + frame;
             }
         }
         return description;
@@ -143,22 +162,21 @@ public class TextTraceFormatter implements TraceFormatter {
         }
         Throwable detail = exception.getCause() == null ? exception : exception.getCause();
         return "The test could not find something it needs in your code:\n"
-                + INDENT + message(detail) + "\n"
+                + message(detail) + "\n"
                 + "Check that the name, parameter types and return type are exactly as required.";
     }
 
     private static String describeOutputMismatch(OutputMismatchException exception) {
-        String description = "Your program printed something else than the test expected.\n";
+        String description = "Your program printed something different from what the test expected.\n";
         if (exception.getInput() != null) {
-            String inputDescription = describeInput(exception.getInput());
-            description += inputDescription;
+            description += describeInput(exception.getInput());
         }
         if (exception.getDiff() == null) {
             return description
-                    + "Expected output:\n" + output(exception.getExpected()) + "\n"
-                    + "Actual output:\n" + output(exception.getActual());
+                    + "Your output:\n" + output(exception.getActual()) + "\n\n"
+                    + "Expected output:\n" + output(exception.getExpected());
         }
-        description += "Your program printed:\n";
+        description += "Your output:\n";
         String actual = exception.getActual();
         List<Edit<Token>> edits = exception.getDiff().getEdits();
         int first = IntStream.range(0, edits.size())
@@ -179,39 +197,40 @@ public class TextTraceFormatter implements TraceFormatter {
             marker = "^ missing: \"" + token.value() + '"';
         } else {
             start = token.index();
-            marker = "^".repeat(token.length()) + " not expected";
-            if (first + 1 < edits.size()) {
-                Edit<Token> next = edits.get(first + 1);
-                if (next.type() == EditType.INSERT) {
-                    marker += ", expected: \"" + next.value().value() + '"';
-                }
-            }
+            String carets = "^".repeat(token.length());
+            boolean replaced = first + 1 < edits.size() && edits.get(first + 1).type() == EditType.INSERT;
+            marker = replaced
+                    ? carets + " expected \"" + edits.get(first + 1).value().value() + "\" here"
+                    : carets + " not expected";
         }
 
-        // show the line of the mismatch with the marker underneath
+        // show the output up to the line of the mismatch with the marker underneath
         int lineStart = actual.lastIndexOf('\n', start - 1) + 1;
         int lineEnd = actual.indexOf('\n', start);
         String text = actual.substring(0, lineEnd == -1 ? actual.length() : lineEnd);
-        return description + text + "\n" + " ".repeat(start - lineStart) + marker;
+        return description + framed(text + "\n" + " ".repeat(start - lineStart) + marker);
     }
 
     private static String describeInput(Input input) {
-        return "Input: [" + String.join(", ", input.get().stream()
+        return "Input: " + input.get().stream()
                 .map(o -> '"' + o.toString() + '"')
-                .toList()) +
-                "]\n";
+                .collect(Collectors.joining(", ")) + "\n";
     }
 
     private static String output(String output) {
-        return indent(output == null || output.isEmpty() ? "(nothing)" : output);
+        return output == null || output.isEmpty() ? "(nothing)" : framed(output);
+    }
+
+    /**
+     * Puts separator lines above and below the text, so text from the program stands apart
+     * from the explanation around it.
+     */
+    private static String framed(String text) {
+        return SEPARATOR + "\n" + text.lines().collect(Collectors.joining("\n")) + "\n" + SEPARATOR;
     }
 
     private static String message(Throwable throwable) {
         return throwable.getMessage() == null ? "(no message)" : throwable.getMessage();
-    }
-
-    private static String indent(String text) {
-        return text.lines().map(line -> TextTraceFormatter.INDENT + line).collect(Collectors.joining("\n"));
     }
 
 }
