@@ -12,18 +12,16 @@ import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.Settings;
 import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.collector.LinearEventHistory;
-import plus.einfprog.log.event.ExceptionEvent;
 import plus.einfprog.log.format.TextTraceFormatter;
 import plus.einfprog.log.format.TraceFormatter;
 import plus.einfprog.pipeline.InvocationPipeline;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.function.Supplier;
 
 /**
  * This extension serves as the integration point between einfprog-jrunit and JUnit.
- * It hooks into the JUnit test lifecycle and initializes the einfprog-jrunit context.
+ * It hooks into the JUnit test lifecycle: it lets {@link EinfprogJRunit#initialize} set up a fresh context before
+ * each test and turns test failures into the formatted trace.
  */
 @AllArgsConstructor
 public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseable, TestExecutionExceptionHandler {
@@ -39,17 +37,7 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
 
     @Override
     public void beforeEach(ExtensionContext context) {
-        EinfprogJRunit.clearContext();
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-
-        EinfprogJRunit.setContext(new Context(
-                pipeline.get(),
-                collector.get(),
-                formatter.get(),
-                settings,
-                out));
+        EinfprogJRunit.initialize(pipeline.get(), collector.get(), formatter.get(), settings);
     }
 
     public static EinfprogJRunitExtension getDefault() {
@@ -72,11 +60,7 @@ public class EinfprogJRunitExtension implements BeforeEachCallback, AutoCloseabl
             throw throwable;
         }
 
-        InvocationEventCollector eventCollector = EinfprogJRunit.getContext().eventCollector();
-        eventCollector.event(new ExceptionEvent(throwable));
-
-        TraceFormatter traceFormatter = EinfprogJRunit.getContext().traceFormatter();
-        String message = traceFormatter.format(eventCollector.getTrace());
+        String message = EinfprogJRunit.recordFailure(throwable);
 
         // Carry the expected/actual values over so IDEs can still offer their difference viewer.
         if (throwable instanceof AssertionFailedError failure
