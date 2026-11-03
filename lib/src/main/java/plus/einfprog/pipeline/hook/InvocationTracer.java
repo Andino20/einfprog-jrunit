@@ -21,6 +21,13 @@ import java.util.concurrent.*;
  */
 public class InvocationTracer implements BeforeHook, AfterHook {
 
+    private static final ExecutorService TO_STRING_EXECUTOR =
+            Executors.newCachedThreadPool(r -> {
+                Thread t = new Thread(r, "einfprog-toString");
+                t.setDaemon(true);
+                return t;
+            });
+
     private final InvocationEventCollector eventCollector;
 
     public InvocationTracer(InvocationEventCollector eventCollector) {
@@ -68,8 +75,7 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     }
 
     private static String safeObjectToStringTimeout(Object o) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<String> toStringResult = executor.submit(() -> safeObjectToString(o));
+        Future<String> toStringResult = TO_STRING_EXECUTOR.submit(() -> safeObjectToString(o));
 
         long timeout = EinfprogJRunit.getContext().settings().getTimeout();
         TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
@@ -82,8 +88,10 @@ public class InvocationTracer implements BeforeHook, AfterHook {
                 throw new RuntimeException("an unexpected error occurred", e);
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException("an unexpected error occurred", e);
         } catch (TimeoutException e) {
+            toStringResult.cancel(true);
             throw new InvocationTimeoutException(e);
         }
     }
