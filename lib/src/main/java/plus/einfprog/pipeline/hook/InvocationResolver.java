@@ -7,28 +7,31 @@ import plus.einfprog.reflection.Any;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Tries to resolve the target method or constructor based on the requested name, parameter types and return type.
  *
  * <p>
- * Iterates over all methods/constructors of the target class to check if
- * their signatures match a list of argument types and return value.
- * If no match is found, it repeats by looking at the target superclass
- * and so on.
+ * First tries an exact lookup of a public method/constructor with the given parameter types.
+ * If that fails, it iterates over all declared methods/constructors of the target class
+ * (including non-public ones) to check if their signatures match the requested parameter types
+ * and return type. For methods, if no match is found, it repeats by looking at the target
+ * superclass and so on. Compiler-generated bridge methods are skipped.
  * A {@link TargetNotFoundException} is thrown if no match can be found.
- * If multiple candidates are found in the case of a method,
- * the one with the most specific return type is chosen.
+ * If multiple candidates match (e.g. overloads that are only distinguished by an {@link Any}
+ * argument), an arbitrary one is chosen.
  * </p>
  *
  * <p>
  * A parameter type matches if it is the exact same type, if the method parameter type is assignable
  * from the provided type, or if the provided type is the {@link Any} wildcard.
+ * The return type matches if the requested return type is assignable from the declared one,
+ * or if the requested return type is {@link Any}.
+ * The return type is not checked by the exact lookup.
  * </p>
  *
  * <p>
@@ -70,22 +73,30 @@ public class InvocationResolver implements BeforeHook {
 
     private Optional<Method> findMatchingMethod(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {
         try {
-            return Optional.of(targetClass.getMethod(name, types));
-        } catch (NoSuchMethodException e) {
-            Class<?> t = targetClass;
-            while (t != null) {
-                List<Method> methods = Arrays.stream(t.getDeclaredMethods())
-                        .filter(m -> m.getName().equals(name))
-                        .filter(m -> match(m.getReturnType(), returnType))
-                        .filter(m -> match(m.getParameterTypes(), types))
-                        .toList();
-
-                Optional<Method> mostSpecific = findMostSpecificMethodByReturnValue(methods);
-                if (mostSpecific.isPresent())
-                    return mostSpecific;
-
-                t = t.getSuperclass();
+            Method m = targetClass.getMethod(name, types);
+            if (match(returnType, m.getReturnType())) {
+                return Optional.of(m);
+            } else {
+                return findMatchingMethodWithAny(targetClass, name, returnType, types);
             }
+        } catch (NoSuchMethodException e) {
+            return findMatchingMethodWithAny(targetClass, name, returnType, types);
+        }
+    }
+
+    private Optional<Method> findMatchingMethodWithAny(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {
+        Class<?> t = targetClass;
+        while (t != null) {
+            Stream<Method> methods = Arrays.stream(t.getDeclaredMethods())
+                    .filter(m -> m.getName().equals(name))
+                    .filter(m -> match(returnType, m.getReturnType()))
+                    .filter(m -> match(m.getParameterTypes(), types))
+                    .filter(m -> !m.isBridge());
+
+            Optional<Method> method = methods.findAny();
+            if (method.isPresent()) return method;
+
+            t = t.getSuperclass();
         }
         return Optional.empty();
     }
@@ -100,25 +111,7 @@ public class InvocationResolver implements BeforeHook {
     }
 
     private static boolean match(Class<?> a, Class<?> b) {
-        return b == Any.class || a == b || a.isAssignableFrom(b);
-    }
-
-    private static Optional<Method> findMostSpecificMethodByReturnValue(List<Method> methods) {
-        List<Method> specificMethods = new ArrayList<>();
-        for (Method a : methods) {
-            boolean isMostSpecific = true;
-            for (Method b : methods) {
-                Class<?> retA = a.getReturnType();
-                Class<?> retB = b.getReturnType();
-                if (a.equals(b) && !retA.equals(retB) && retA.isAssignableFrom(retB)) {
-                    isMostSpecific = false;
-                    break;
-                }
-            }
-            if (isMostSpecific)
-                specificMethods.add(a);
-        }
-        return specificMethods.stream().findAny();
+        return a == Any.class || b == Any.class || a == b || a.isAssignableFrom(b);
     }
 
     private static String typesToString(Class<?>[] types) {
