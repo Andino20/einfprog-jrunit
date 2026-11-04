@@ -1,6 +1,7 @@
 package plus.einfprog.pipeline.hook;
 
 import plus.einfprog.EinfprogJRunit;
+import plus.einfprog.pipeline.TimeoutRunner;
 import plus.einfprog.exception.InvocationTimeoutException;
 import plus.einfprog.exception.TargetInvocationException;
 import plus.einfprog.log.collector.InvocationEventCollector;
@@ -18,15 +19,15 @@ import java.util.concurrent.*;
 /**
  * Converts {@link Invocation} to {@link MethodCallEvent} and {@link InvocationResult} to {@link InvocationReturnEvent}
  * and passes them to the {@link InvocationEventCollector}.
+ *
+ * <p>Targets, arguments and return values are recorded as strings. Since {@code toString} may be student code,
+ * it runs on a separate thread of a shared {@link TimeoutRunner} with the configured timeout:
+ * a {@code toString} that doesn't finish in time throws an {@link InvocationTimeoutException},
+ * and one that throws an exception is reported as a {@link TargetInvocationException}.</p>
  */
 public class InvocationTracer implements BeforeHook, AfterHook {
 
-    private static final ExecutorService TO_STRING_EXECUTOR =
-            Executors.newCachedThreadPool(r -> {
-                Thread t = new Thread(r, "einfprog-toString");
-                t.setDaemon(true);
-                return t;
-            });
+    private static final TimeoutRunner TIMEOUT_RUNNER = new TimeoutRunner("einfprog-toString");
 
     private final InvocationEventCollector eventCollector;
 
@@ -75,23 +76,11 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     }
 
     private static String safeObjectToStringTimeout(Object o) {
-        Future<String> toStringResult = TO_STRING_EXECUTOR.submit(() -> safeObjectToString(o));
-
         long timeout = EinfprogJRunit.getContext().settings().getTimeout();
         TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
         try {
-            return toStringResult.get(timeout, unit);
-        } catch (ExecutionException e) {
-            if (e.getCause() instanceof RuntimeException r) {
-                throw r;
-            } else {
-                throw new RuntimeException("an unexpected error occurred", e);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("an unexpected error occurred", e);
+            return TIMEOUT_RUNNER.submit(timeout, unit, () -> safeObjectToString(o));
         } catch (TimeoutException e) {
-            toStringResult.cancel(true);
             throw new InvocationTimeoutException(e);
         }
     }

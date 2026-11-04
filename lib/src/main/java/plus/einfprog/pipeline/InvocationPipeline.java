@@ -31,14 +31,14 @@ import java.util.concurrent.*;
  * <p>If the targeted method throws an exception internally, that exception is wrapped inside a {@link TargetInvocationException}
  * and can be retrieved by {@code getCause()}.</p>
  *
- * <p>If the execution of a target method takes more time than the pre-configured timeout duration, it is
- * interrupted and a {@link InvocationTimeoutException} is thrown.
+ * <p>The target method or constructor is invoked on a separate thread of a shared {@link TimeoutRunner}.
+ * If it takes more time than the pre-configured timeout duration, an {@link InvocationTimeoutException} is thrown
+ * and the thread is interrupted.
  * This timeout can be configured via {@link plus.einfprog.Settings} during library initialization.</p>
  *
- * @param before The pipeline to be executed before the target method is invoked.
- * @param after The pipeline to be executed after the target method has been invoked if and only if there was no internal exception.
+ * @param before    The pipeline to be executed before the target method is invoked.
+ * @param after     The pipeline to be executed after the target method has been invoked if and only if there was no internal exception.
  * @param exception The pipeline to be executed if and only if an exception occurs during method invocation.
- *
  * @see Pipeline
  * @see BeforeHook
  * @see AfterHook
@@ -50,8 +50,11 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
                                  Pipeline<InvocationResult, AfterHook> after,
                                  Pipeline<Throwable, ExceptionHook> exception) {
 
+    private static final TimeoutRunner TIMEOUT_RUNNER = new TimeoutRunner("einfprog-invocation");
+
     /**
      * Initializes the before, after, and exception pipelines without hooks.
+     *
      * @return An {@link InvocationPipeline} object with empty pipelines.
      */
     public static InvocationPipeline empty() {
@@ -61,33 +64,27 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
                 new Pipeline<>(exceptionHook -> exceptionHook::apply));
     }
 
+    /**
+     * Runs the before hooks, invokes the resolved executable with the configured timeout and runs the after hooks.
+     *
+     * @param invocation the invocation to run
+     * @return the result after all after hooks have been applied
+     * @throws TargetInvocationException   if the target method or constructor threw an exception
+     * @throws InvocationTimeoutException if the invocation didn't finish within the configured timeout
+     */
     public InvocationResult run(Invocation invocation) {
-        long timeout = EinfprogJRunit.getContext().settings().getTimeout();
-        TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
-
         invocation = before().run(invocation);
-        Object returnValue = invokeWithTimeout(invocation, timeout, unit);
+        Object returnValue = invokeWithTimeout(invocation);
         return after().run(InvocationResult.from(invocation, returnValue));
     }
 
-    private Object invokeWithTimeout(Invocation invocation, long timeout, TimeUnit unit) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Object> returnValue = executor.submit(() -> invoke(invocation));
-
+    private Object invokeWithTimeout(Invocation invocation) {
+        long timeout = EinfprogJRunit.getContext().settings().getTimeout();
+        TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
         try {
-            return returnValue.get(timeout, unit);
-        } catch (ExecutionException e) {
-            if (e.getCause() instanceof RuntimeException r) {
-                throw r;
-            } else {
-                throw new RuntimeException("an unexpected error occurred", e);
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException("an unexpected error occurred", e);
+            return TIMEOUT_RUNNER.submit(timeout, unit, () -> invoke(invocation));
         } catch (TimeoutException e) {
             throw new InvocationTimeoutException(e);
-        } finally {
-            executor.shutdownNow();
         }
     }
 
