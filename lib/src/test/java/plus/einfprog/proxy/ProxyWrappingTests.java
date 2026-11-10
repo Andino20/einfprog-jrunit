@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 
 @SuppressWarnings("unused")
-class AutoWrapperTests {
+class ProxyWrappingTests {
 
     @RegisterExtension
     static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
