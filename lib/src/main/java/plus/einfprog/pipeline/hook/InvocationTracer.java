@@ -91,7 +91,30 @@ public class InvocationTracer implements BeforeHook, AfterHook {
         }
 
         try {
-            return o.getClass().isArray() ? Arrays.deepToString((Object[]) o) : o.toString();
+            if (o instanceof Object[] arr) {
+                return Arrays.deepToString(arr);
+            } else if (o.getClass().isArray()) { // o is an array of primitives
+                Class<?> eClass = o.getClass();
+                if (eClass == byte[].class)
+                    return Arrays.toString((byte[]) o);
+                else if (eClass == short[].class)
+                    return Arrays.toString((short[]) o);
+                else if (eClass == int[].class)
+                    return Arrays.toString((int[]) o);
+                else if (eClass == long[].class)
+                    return Arrays.toString((long[]) o);
+                else if (eClass == char[].class)
+                    return Arrays.toString((char[]) o);
+                else if (eClass == float[].class)
+                    return Arrays.toString((float[]) o);
+                else if (eClass == double[].class)
+                    return Arrays.toString((double[]) o);
+                else if (eClass == boolean[].class)
+                    return Arrays.toString((boolean[]) o);
+                throw new IllegalStateException("unexpected array type: " + eClass.getName());
+            } else {
+                return o.toString();
+            }
         } catch (Exception e) {
             throw new TargetInvocationException("an exception occurred while invoking the toString method of an object", e);
         }
