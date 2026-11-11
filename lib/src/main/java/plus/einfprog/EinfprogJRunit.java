@@ -4,9 +4,7 @@ import plus.einfprog.log.collector.InvocationEventCollector;
 import plus.einfprog.log.event.ExceptionEvent;
 import plus.einfprog.log.format.TraceFormatter;
 import plus.einfprog.pipeline.InvocationPipeline;
-import plus.einfprog.pipeline.hook.InvocationResolver;
 import plus.einfprog.pipeline.hook.InvocationTracer;
-import plus.einfprog.pipeline.hook.ProxyAutoWrapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -54,17 +52,11 @@ public class EinfprogJRunit {
     }
 
     private static void registerDefaultHooks(Context context) {
-        ProxyAutoWrapper wrapper = new ProxyAutoWrapper();
-        InvocationResolver resolver = new InvocationResolver();
         InvocationTracer tracer = new InvocationTracer(context.eventCollector());
 
         InvocationPipeline pipeline = context.pipeline();
         pipeline.before().addLast(tracer);
-        pipeline.before().addFirst(resolver);
-        pipeline.before().addFirst(wrapper);
-
         pipeline.after().addLast(tracer);
-        pipeline.after().addLast(wrapper);
     }
 
     /**

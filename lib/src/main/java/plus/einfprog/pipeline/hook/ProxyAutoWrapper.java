@@ -1,10 +1,6 @@
 package plus.einfprog.pipeline.hook;
 
-import plus.einfprog.pipeline.Invocation;
-import plus.einfprog.pipeline.InvocationResult;
 import plus.einfprog.proxy.ProxyUtil;
-
-import java.util.*;
 
 /**
  * Performs the conversion between proxies and target objects.
@@ -18,45 +14,20 @@ import java.util.*;
  * method needs to be wrapped.
  * </p>
  */
-public class ProxyAutoWrapper implements BeforeHook, AfterHook {
+public class ProxyAutoWrapper {
 
-    private final Map<UUID, Class<?>> originalReturnTypes = new HashMap<>();
-
-    @Override
-    public Invocation apply(Invocation invocation) {
-        List<Class<?>> paramTypes = invocation.parameterTypes().stream()
-                .<Class<?>>map(ProxyUtil::unwrapClass)
-                .toList();
-        Class<?> returnType = ProxyUtil.unwrapClass(invocation.returnType());
-        Object[] args = unwrapInstances(invocation.arguments().toArray());
-
-        originalReturnTypes.put(invocation.id(), invocation.returnType());
-        return invocation
-                .withParameterTypes(paramTypes)
-                .withReturnType(returnType)
-                .withArguments(Arrays.asList(args));
-    }
-
-    @Override
-    public InvocationResult apply(InvocationResult result) {
-        Class<?> expectedReturnType = originalReturnTypes.remove(result.id());
-        Class<?> baseType = expectedReturnType;
+    public static Object wrapReturnValue(Class<?> originalReturnType, Object returnValue) {
+        Class<?> baseType = originalReturnType;
         while (baseType.isArray()) {
             baseType = baseType.getComponentType();
         }
 
         if (ProxyUtil.isProxyClass(baseType)) {
-            return result.withReturnValue(expectedReturnType.isArray() ?
-                    ProxyUtil.wrapArray(result.returnValue(), baseType) :
-                    ProxyUtil.wrap(result.returnValue(), baseType));
+            return originalReturnType.isArray() ?
+                    ProxyUtil.wrapArray(returnValue, baseType) :
+                    ProxyUtil.wrap(returnValue, baseType);
         }
-        return result;
+        return returnValue;
     }
 
-    private static Object[] unwrapInstances(Object[] args) {
-        if (args == null) return new Object[0];
-        return Arrays.stream(args)
-                .map(ProxyUtil::unwrap)
-                .toArray();
-    }
 }

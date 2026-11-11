@@ -3,13 +3,13 @@ package plus.einfprog.pipeline;
 import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.exception.InvocationTimeoutException;
 import plus.einfprog.exception.TargetInvocationException;
-import plus.einfprog.pipeline.hook.AfterHook;
-import plus.einfprog.pipeline.hook.BeforeHook;
-import plus.einfprog.pipeline.hook.ExceptionHook;
+import plus.einfprog.pipeline.hook.*;
+import plus.einfprog.proxy.ProxyUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -67,15 +67,26 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
     /**
      * Runs the before hooks, invokes the resolved executable with the configured timeout and runs the after hooks.
      *
-     * @param invocation the invocation to run
      * @return the result after all after hooks have been applied
-     * @throws TargetInvocationException   if the target method or constructor threw an exception
+     * @throws TargetInvocationException  if the target method or constructor threw an exception
      * @throws InvocationTimeoutException if the invocation didn't finish within the configured timeout
      */
-    public InvocationResult run(Invocation invocation) {
+    public InvocationResult run(InvocationRequest request) {
+        List<Class<?>> unwrappedParameterTypes = request.argumentTypes().stream().<Class<?>>map(ProxyUtil::unwrapClass).toList();
+        List<Object> unwrappedArguments = request.arguments().stream().map(ProxyUtil::unwrap).toList();
+        Class<?> unwrappedReturnType = ProxyUtil.unwrapClass(request.returnType());
+
+        Invocation invocation = InvocationResolver.resolve(request
+                .withArgumentTypes(unwrappedParameterTypes)
+                .withArguments(unwrappedArguments)
+                .withReturnType(unwrappedReturnType));
+
         invocation = before().run(invocation);
         Object returnValue = invokeWithTimeout(invocation);
-        return after().run(InvocationResult.from(invocation, returnValue));
+
+        Object wrappedReturnValue = ProxyAutoWrapper.wrapReturnValue(request.returnType(), returnValue);
+
+        return after().run(InvocationResult.from(invocation, wrappedReturnValue));
     }
 
     private Object invokeWithTimeout(Invocation invocation) {

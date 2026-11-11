@@ -4,13 +4,12 @@ import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.exception.TargetNotFoundException;
 import plus.einfprog.pipeline.InvocationPipeline;
 import plus.einfprog.pipeline.Invocation;
+import plus.einfprog.pipeline.InvocationRequest;
 import plus.einfprog.pipeline.InvocationResult;
 import plus.einfprog.proxy.ProxyUtil;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Fluent reflection wrapper for executing methods dynamically through the framework's invocation pipeline.
@@ -76,16 +75,15 @@ public class Reflected {
             throw new IllegalArgumentException("Types cannot be null");
 
         InvocationPipeline pipeline = EinfprogJRunit.getContext().pipeline();
-        Invocation invocation = Invocation.builder()
-                .id(UUID.randomUUID())
+        InvocationRequest request = InvocationRequest.builder()
                 .name(method)
-                .parameterTypes(List.of(types))
+                .argumentTypes(Arrays.asList(types))
                 .returnType(Any.class)
                 .arguments(Arrays.asList(args))
                 .targetClass(type)
                 .target(target)
                 .build();
-        InvocationResult result = pipeline.run(invocation);
+        InvocationResult result = pipeline.run(request);
         if (result.invocation().returnType().equals(Void.TYPE)) {
             return new Reflected(result.invocation());
         }
@@ -94,16 +92,15 @@ public class Reflected {
 
     public Reflected create(Object... args) {
         InvocationPipeline pipeline = EinfprogJRunit.getContext().pipeline();
-        Invocation invocation = Invocation.builder()
-                .id(UUID.randomUUID())
+        InvocationRequest request = InvocationRequest.builder()
                 .name("<init>")
-                .parameterTypes(List.of(types(args)))
+                .argumentTypes(Arrays.asList(types(args)))
                 .returnType(Any.class)
                 .arguments(Arrays.asList(args))
                 .targetClass(type)
                 .target(null)
                 .build();
-        return new Reflected(pipeline.run(invocation).returnValue());
+        return new Reflected(pipeline.run(request).returnValue());
     }
 
     @SuppressWarnings("TypeParameterUnusedInFormals")

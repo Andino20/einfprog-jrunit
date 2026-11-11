@@ -2,6 +2,7 @@ package plus.einfprog.pipeline.hook;
 
 import plus.einfprog.exception.TargetNotFoundException;
 import plus.einfprog.pipeline.Invocation;
+import plus.einfprog.pipeline.InvocationRequest;
 import plus.einfprog.reflection.Any;
 
 import java.lang.reflect.Executable;
@@ -9,11 +10,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Tries to resolve the target method or constructor based on the requested name, parameter types and return type.
+ * Tries to resolve the target method or constructor based on the requested executableName, parameter types and return type.
  *
  * <p>
  * First tries an exact lookup of a public method/constructor with the given parameter types.
@@ -35,17 +37,16 @@ import java.util.stream.Stream;
  * </p>
  *
  * <p>
- * For constructors the {@link Invocation#name()} has to be {@code "<init>"}.
+ * For constructors the {@link Invocation#executableName()} has to be {@code "<init>"}.
  * </p>
  */
-public class InvocationResolver implements BeforeHook {
+public class InvocationResolver {
 
-    @Override
-    public Invocation apply(Invocation invocation) {
-        Class<?> targetClass = invocation.targetClass();
-        String name = invocation.name();
-        Class<?>[] types = invocation.parameterTypes().toArray(Class<?>[]::new);
-        Class<?> returnType = invocation.returnType();
+    public static Invocation resolve(InvocationRequest request) {
+        Class<?> targetClass = request.targetClass();
+        String name = request.name();
+        Class<?>[] types = request.argumentTypes().toArray(Class<?>[]::new);
+        Class<?> returnType = request.returnType();
 
         Executable exec;
         if (name.equals("<init>")) {
@@ -58,10 +59,18 @@ public class InvocationResolver implements BeforeHook {
                             typeToString(returnType), name, typesToString(types), targetClass.getSimpleName())));
         }
         exec.setAccessible(true);
-        return invocation.withExecutable(exec);
+
+        return Invocation.builder()
+                .id(UUID.randomUUID())
+                .arguments(request.arguments())
+                .targetClass(request.targetClass())
+                .target(request.target())
+                .executable(exec)
+                .build();
+
     }
 
-    private Optional<Constructor<?>> findMatchingConstructor(Class<?> targetClass, Class<?>[] types) {
+    private static Optional<Constructor<?>> findMatchingConstructor(Class<?> targetClass, Class<?>[] types) {
         try {
             return Optional.of(targetClass.getConstructor(types));
         } catch (NoSuchMethodException e) {
@@ -71,7 +80,7 @@ public class InvocationResolver implements BeforeHook {
         }
     }
 
-    private Optional<Method> findMatchingMethod(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {
+    private static Optional<Method> findMatchingMethod(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {
         try {
             Method m = targetClass.getMethod(name, types);
             if (match(returnType, m.getReturnType())) {
@@ -84,7 +93,7 @@ public class InvocationResolver implements BeforeHook {
         }
     }
 
-    private Optional<Method> findMatchingMethodWithAny(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {
+    private static Optional<Method> findMatchingMethodWithAny(Class<?> targetClass, String name, Class<?> returnType, Class<?>[] types) {
         Class<?> t = targetClass;
         while (t != null) {
             Stream<Method> methods = Arrays.stream(t.getDeclaredMethods())

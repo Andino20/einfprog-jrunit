@@ -44,7 +44,7 @@ class ProxyWrappingTests {
         }
     }
 
-    @Proxy("plus.einfprog.proxy.AutoWrapperTests$Foo")
+    @Proxy("plus.einfprog.proxy.ProxyWrappingTests$Foo")
     public interface FooProxy {
         void bar(FooProxy f);
 

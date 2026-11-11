@@ -48,7 +48,7 @@ public class InvocationTracer implements BeforeHook, AfterHook {
     private void traceMethod(Invocation invocation) {
         eventCollector.event(MethodCallEvent.builder()
                 .id(invocation.id().toString())
-                .method(invocation.name())
+                .method(invocation.executableName())
                 .types(invocation.parameterTypes().stream().map(Class::getSimpleName).toList())
                 .arguments(invocation.arguments().stream().map(InvocationTracer::safeObjectToStringTimeout).toList())
                 .clazz(invocation.targetClass())
