@@ -15,29 +15,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Tries to resolve the target method or constructor based on the requested executableName, parameter types and return type.
+ * Resolves an {@link InvocationRequest} into an {@link Invocation} by finding the matching method,
+ * or constructor if the name is {@code "<init>"}. Called by the
+ * {@link plus.einfprog.pipeline.InvocationPipeline} with proxies already unwrapped.
  *
  * <p>
- * First tries an exact lookup of a public method/constructor with the given parameter types.
- * If that fails, it iterates over all declared methods/constructors of the target class
- * (including non-public ones) to check if their signatures match the requested parameter types
- * and return type. For methods, if no match is found, it repeats by looking at the target
- * superclass and so on. Compiler-generated bridge methods are skipped.
- * A {@link TargetNotFoundException} is thrown if no match can be found.
- * If multiple candidates match (e.g. overloads that are only distinguished by an {@link Any}
- * argument), an arbitrary one is chosen.
- * </p>
- *
- * <p>
- * A parameter type matches if it is the exact same type, if the method parameter type is assignable
- * from the provided type, or if the provided type is the {@link Any} wildcard.
- * The return type matches if the requested return type is assignable from the declared one,
- * or if the requested return type is {@link Any}.
- * The return type is not checked by the exact lookup.
- * </p>
- *
- * <p>
- * For constructors the {@link Invocation#executableName()} has to be {@code "<init>"}.
+ * Tries an exact public lookup first, then searches all declared executables (non-public too,
+ * and superclasses for methods, skipping bridge methods). Types match if they are assignable
+ * or {@link Any}. If several candidates match, an arbitrary one is chosen; if none does,
+ * a {@link TargetNotFoundException} is thrown.
  * </p>
  */
 public class InvocationResolver {

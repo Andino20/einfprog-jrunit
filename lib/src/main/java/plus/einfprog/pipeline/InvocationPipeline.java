@@ -19,6 +19,10 @@ import java.util.concurrent.*;
  * These pipelines contain hooks which can be configured to intercept and inspect method calls, exceptions, and return values.
  * </p>
  *
+ * <p>Before any hook runs, {@link #run(InvocationRequest)} unwraps proxies in the {@link InvocationRequest}
+ * and resolves it into an {@link Invocation} (see {@link InvocationResolver}). Hooks therefore only see
+ * target objects and a resolved executable.</p>
+ *
  * <p>There are three pipelines that are executed at different steps of the invocation process:</p>
  * <ul>
  *     <li><strong>Before</strong> - Intercepts method calls before they are invoked on the target object or class.</li>
@@ -65,11 +69,15 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
     }
 
     /**
-     * Runs the before hooks, invokes the resolved executable with the configured timeout and runs the after hooks.
+     * Unwraps proxies in the request and resolves it, runs the before hooks, invokes the resolved executable
+     * with the configured timeout, wraps the return value into a proxy if the requested return type is one,
+     * and runs the after hooks.
      *
+     * @param request the requested invocation, possibly containing proxies
      * @return the result after all after hooks have been applied
-     * @throws TargetInvocationException  if the target method or constructor threw an exception
-     * @throws InvocationTimeoutException if the invocation didn't finish within the configured timeout
+     * @throws plus.einfprog.exception.TargetNotFoundException if no matching method or constructor exists
+     * @throws TargetInvocationException                       if the target method or constructor threw an exception
+     * @throws InvocationTimeoutException                      if the invocation didn't finish within the configured timeout
      */
     public InvocationResult run(InvocationRequest request) {
         List<Class<?>> unwrappedParameterTypes = request.argumentTypes().stream().<Class<?>>map(ProxyUtil::unwrapClass).toList();
@@ -83,10 +91,8 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
 
         invocation = before().run(invocation);
         Object returnValue = invokeWithTimeout(invocation);
-
-        Object wrappedReturnValue = ProxyAutoWrapper.wrapReturnValue(request.returnType(), returnValue);
-
-        return after().run(InvocationResult.from(invocation, wrappedReturnValue));
+        InvocationResult result = after().run(InvocationResult.from(invocation, returnValue));
+        return result.withReturnValue(ProxyAutoWrapper.wrapReturnValue(request.returnType(), result.returnValue()));
     }
 
     private Object invokeWithTimeout(Invocation invocation) {

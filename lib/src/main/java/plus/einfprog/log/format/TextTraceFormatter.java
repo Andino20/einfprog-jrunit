@@ -158,12 +158,12 @@ public class TextTraceFormatter implements TraceFormatter {
     private static String describeTargetNotFound(TargetNotFoundException exception) {
         if (exception.getCause() instanceof ClassNotFoundException e) {
             return "The test could not find the class " + message(e) + ".\n"
-                    + "Check that the class exists and that its executableName and package are spelled exactly as required.";
+                    + "Check that the class exists and that its name and package are spelled exactly as required.";
         }
         Throwable detail = exception.getCause() == null ? exception : exception.getCause();
         return "The test could not find something it needs in your code:\n"
                 + message(detail) + "\n"
-                + "Check that the executableName, parameter types and return type are exactly as required.";
+                + "Check that the name, parameter types and return type are exactly as required.";
     }
 
     private static String describeOutputMismatch(OutputMismatchException exception) {

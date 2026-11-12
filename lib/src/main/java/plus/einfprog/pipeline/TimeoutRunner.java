@@ -21,7 +21,7 @@ public class TimeoutRunner {
     /**
      * Creates a runner with its own thread pool.
      *
-     * @param threadName the executableName of the pool's threads, shown in thread dumps
+     * @param threadName the name of the pool's threads, shown in thread dumps
      */
     public TimeoutRunner(String threadName) {
         executor = Executors.newCachedThreadPool((r) -> {

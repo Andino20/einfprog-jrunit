@@ -10,21 +10,16 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Describes a single invocation of an {@link Executable} (a {@link java.lang.reflect.Method} or
- * {@link java.lang.reflect.Constructor}) that is passed through the {@link plus.einfprog.pipeline.InvocationPipeline}.
+ * A resolved call of a method or constructor, created by {@link plus.einfprog.pipeline.hook.InvocationResolver}
+ * and passed to the hooks of the {@link InvocationPipeline}. Proxies are already unwrapped, and the signature
+ * accessors describe the resolved {@code executable}, not the request (which may have used
+ * {@link plus.einfprog.reflection.Any}).
  *
- * <p>
- * The {@code executableName}, {@code parameterTypes} and {@code returnType} describe the signature that is requested
- * by the caller. The {@code executable} is {@code null} until it has been resolved against the
- * {@code targetClass}. Hooks that need to distinguish between methods and constructors can pattern match
- * against the resolved {@code executable}.
- * </p>
- *
- * @param id             a unique id shared with the corresponding {@link InvocationResult}
- * @param arguments      the argument values passed to the executable
- * @param targetClass    the class on which the executable is resolved
- * @param target         the instance on which a method is invoked, or {@code null} for static methods and constructors
- * @param executable     the resolved executable, or {@code null} if it has not been resolved yet
+ * @param id          unique id, shared with the corresponding {@link InvocationResult}
+ * @param arguments   the argument values
+ * @param targetClass the class the executable was resolved on (not necessarily its declaring class)
+ * @param target      the instance a method is called on; {@code null} for static methods and constructors
+ * @param executable  the resolved method or constructor
  */
 @Builder
 public record Invocation(@NonNull UUID id,
@@ -33,14 +28,23 @@ public record Invocation(@NonNull UUID id,
                          Object target,
                          Executable executable) {
 
+    /**
+     * @return the declared parameter types of the executable
+     */
     public List<Class<?>> parameterTypes() {
         return Arrays.asList(executable.getParameterTypes());
     }
 
+    /**
+     * @return the declared return type of a method, or the declaring class for a constructor
+     */
     public Class<?> returnType() {
         return executable instanceof Method m ? m.getReturnType() : executable.getDeclaringClass();
     }
 
+    /**
+     * @return the name of a method, or {@code "<init>"} for a constructor
+     */
     public String executableName() {
         return executable instanceof Method m ? m.getName() : "<init>";
     }

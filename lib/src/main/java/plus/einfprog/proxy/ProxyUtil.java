@@ -323,7 +323,7 @@ public interface ProxyUtil {
      *
      * <p>The target class is determined by the {@link Proxy} annotation, inspecting
      * first the class itself, then its implemented interfaces. The annotation's value
-     * is used to resolve the target class by executableName.
+     * is used to resolve the target class by name.
      *
      * @param proxyClass the proxy class to resolve the target class for; must not be {@code null}
      * @return the resolved target class
