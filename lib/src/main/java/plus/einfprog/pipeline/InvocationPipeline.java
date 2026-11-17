@@ -1,19 +1,14 @@
 package plus.einfprog.pipeline;
 
-import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.exception.InvocationTimeoutException;
 import plus.einfprog.exception.TargetInvocationException;
-import plus.einfprog.pipeline.hook.*;
-import plus.einfprog.proxy.ProxyUtil;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.*;
+import plus.einfprog.pipeline.hook.AfterHook;
+import plus.einfprog.pipeline.hook.BeforeHook;
+import plus.einfprog.pipeline.hook.ExceptionHook;
+import plus.einfprog.pipeline.hook.InvocationResolver;
 
 /**
- * <p>This class represents a collection of {@link Pipeline} objects
+ * <p>This interface represents a collection of {@link Pipeline} objects
  * that are executed each time a method or constructor should be invoked on a target class or object,
  * either via proxy objects or {@link plus.einfprog.reflection.Reflected}.
  * These pipelines contain hooks which can be configured to intercept and inspect method calls, exceptions, and return values.
@@ -30,7 +25,7 @@ import java.util.concurrent.*;
  *     <li><strong>Exception</strong> - Intercepts exceptions thrown during method invocation.</li>
  * </ul>
  *
- * <p>Each pipeline can be interrupted prematurely is not guaranteed to execute each hook if a previous hook throws an exception.</p>
+ * <p>Each pipeline can be interrupted prematurely and is not guaranteed to execute each hook if a previous hook throws an exception.</p>
  *
  * <p>If the targeted method throws an exception internally, that exception is wrapped inside a {@link TargetInvocationException}
  * and can be retrieved by {@code getCause()}.</p>
@@ -40,9 +35,6 @@ import java.util.concurrent.*;
  * and the thread is interrupted.
  * This timeout can be configured via {@link plus.einfprog.Settings} during library initialization.</p>
  *
- * @param before    The pipeline to be executed before the target method is invoked.
- * @param after     The pipeline to be executed after the target method has been invoked if and only if there was no internal exception.
- * @param exception The pipeline to be executed if and only if an exception occurs during method invocation.
  * @see Pipeline
  * @see BeforeHook
  * @see AfterHook
@@ -50,19 +42,15 @@ import java.util.concurrent.*;
  * @see TargetInvocationException
  * @see InvocationTimeoutException
  */
-public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
-                                 Pipeline<InvocationResult, AfterHook> after,
-                                 Pipeline<Throwable, ExceptionHook> exception) {
-
-    private static final TimeoutRunner TIMEOUT_RUNNER = new TimeoutRunner("einfprog-invocation");
+public interface InvocationPipeline {
 
     /**
      * Initializes the before, after, and exception pipelines without hooks.
      *
      * @return An {@link InvocationPipeline} object with empty pipelines.
      */
-    public static InvocationPipeline empty() {
-        return new InvocationPipeline(
+    static InvocationPipeline empty() {
+        return new DefaultInvocationPipeline(
                 new Pipeline<>(beforeHook -> beforeHook::apply),
                 new Pipeline<>(afterHook -> afterHook::apply),
                 new Pipeline<>(exceptionHook -> exceptionHook::apply));
@@ -70,8 +58,8 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
 
     /**
      * Unwraps proxies in the request and resolves it, runs the before hooks, invokes the resolved executable
-     * with the configured timeout, wraps the return value into a proxy if the requested return type is one,
-     * and runs the after hooks.
+     * with the configured timeout, runs the after hooks, and wraps the return value into a proxy if the
+     * requested return type is one.
      *
      * @param request the requested invocation, possibly containing proxies
      * @return the result after all after hooks have been applied
@@ -79,46 +67,20 @@ public record InvocationPipeline(Pipeline<Invocation, BeforeHook> before,
      * @throws TargetInvocationException                       if the target method or constructor threw an exception
      * @throws InvocationTimeoutException                      if the invocation didn't finish within the configured timeout
      */
-    public InvocationResult run(InvocationRequest request) {
-        List<Class<?>> unwrappedParameterTypes = request.argumentTypes().stream().<Class<?>>map(ProxyUtil::unwrapClass).toList();
-        List<Object> unwrappedArguments = request.arguments().stream().map(ProxyUtil::unwrap).toList();
-        Class<?> unwrappedReturnType = ProxyUtil.unwrapClass(request.returnType());
+    InvocationResult run(InvocationRequest request);
 
-        Invocation invocation = InvocationResolver.resolve(request
-                .withArgumentTypes(unwrappedParameterTypes)
-                .withArguments(unwrappedArguments)
-                .withReturnType(unwrappedReturnType));
+    /**
+     * @return the pipeline executed before the target method is invoked
+     */
+    Pipeline<Invocation, BeforeHook> before();
 
-        invocation = before().run(invocation);
-        Object returnValue = invokeWithTimeout(invocation);
-        InvocationResult result = after().run(InvocationResult.from(invocation, returnValue));
-        return result.withReturnValue(ProxyAutoWrapper.wrapReturnValue(request.returnType(), result.returnValue()));
-    }
+    /**
+     * @return the pipeline executed after the target method has been invoked if and only if there was no internal exception
+     */
+    Pipeline<InvocationResult, AfterHook> after();
 
-    private Object invokeWithTimeout(Invocation invocation) {
-        long timeout = EinfprogJRunit.getContext().settings().getTimeout();
-        TimeUnit unit = EinfprogJRunit.getContext().settings().getTimeoutUnit();
-        try {
-            return TIMEOUT_RUNNER.submit(timeout, unit, () -> invoke(invocation));
-        } catch (TimeoutException e) {
-            throw new InvocationTimeoutException(e);
-        }
-    }
-
-    private Object invoke(Invocation invocation) {
-        Object[] args = invocation.arguments().toArray();
-        try {
-            return switch (invocation.executable()) {
-                case Method m -> m.invoke(invocation.target(), args);
-                case Constructor<?> c -> c.newInstance(args);
-                case null -> throw new IllegalStateException("executable of invocation was not resolved");
-            };
-        } catch (InvocationTargetException e) {
-            Throwable t = exception().run(e.getCause());
-            throw new TargetInvocationException("an exception occurred while invoking a target method", t);
-        } catch (ReflectiveOperationException | IllegalArgumentException e) {
-            throw new RuntimeException("an unexpected error occurred", e);
-        }
-    }
-
+    /**
+     * @return the pipeline executed if and only if an exception occurs during method invocation
+     */
+    Pipeline<Throwable, ExceptionHook> exception();
 }
