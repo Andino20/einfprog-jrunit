@@ -1,8 +1,6 @@
-package plus.einfprog.pipeline.hook;
+package plus.einfprog.pipeline;
 
 import plus.einfprog.exception.TargetNotFoundException;
-import plus.einfprog.pipeline.Invocation;
-import plus.einfprog.pipeline.InvocationRequest;
 import plus.einfprog.reflection.Any;
 
 import java.lang.reflect.Executable;

@@ -5,7 +5,6 @@ import plus.einfprog.exception.TargetInvocationException;
 import plus.einfprog.pipeline.hook.AfterHook;
 import plus.einfprog.pipeline.hook.BeforeHook;
 import plus.einfprog.pipeline.hook.ExceptionHook;
-import plus.einfprog.pipeline.hook.InvocationResolver;
 
 /**
  * <p>This interface represents a collection of {@link Pipeline} objects

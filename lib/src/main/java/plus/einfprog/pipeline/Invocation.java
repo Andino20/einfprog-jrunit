@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * A resolved call of a method or constructor, created by {@link plus.einfprog.pipeline.hook.InvocationResolver}
+ * A resolved call of a method or constructor, created by {@link InvocationResolver}
  * and passed to the hooks of the {@link InvocationPipeline}. Proxies are already unwrapped, and the signature
  * accessors describe the resolved {@code executable}, not the request (which may have used
  * {@link plus.einfprog.reflection.Any}).

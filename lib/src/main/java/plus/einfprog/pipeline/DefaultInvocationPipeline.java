@@ -39,7 +39,7 @@ record DefaultInvocationPipeline(Pipeline<Invocation, BeforeHook> before,
         invocation = before().run(invocation);
         Object returnValue = invokeWithTimeout(invocation);
         InvocationResult result = after().run(InvocationResult.from(invocation, returnValue));
-        return result.withReturnValue(ProxyAutoWrapper.wrapReturnValue(request.returnType(), result.returnValue()));
+        return result.withReturnValue(wrapReturnValue(request.returnType(), result.returnValue()));
     }
 
     private Object invokeWithTimeout(Invocation invocation) {
@@ -66,6 +66,20 @@ record DefaultInvocationPipeline(Pipeline<Invocation, BeforeHook> before,
         } catch (ReflectiveOperationException | IllegalArgumentException e) {
             throw new RuntimeException("an unexpected error occurred", e);
         }
+    }
+
+    public static Object wrapReturnValue(Class<?> originalReturnType, Object returnValue) {
+        Class<?> baseType = originalReturnType;
+        while (baseType.isArray()) {
+            baseType = baseType.getComponentType();
+        }
+
+        if (ProxyUtil.isProxyClass(baseType)) {
+            return originalReturnType.isArray() ?
+                    ProxyUtil.wrapArray(returnValue, baseType) :
+                    ProxyUtil.wrap(returnValue, baseType);
+        }
+        return returnValue;
     }
 
 }
