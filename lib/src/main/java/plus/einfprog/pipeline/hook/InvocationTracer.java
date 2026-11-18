@@ -14,10 +14,12 @@ import plus.einfprog.pipeline.InvocationResult;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * Converts {@link Invocation} to {@link MethodCallEvent} and {@link InvocationResult} to {@link InvocationReturnEvent}
+ * Converts {@link Invocation} to {@link MethodCallEvent} or {@link ConstructorCallEvent}
+ * and {@link InvocationResult} to {@link InvocationReturnEvent}
  * and passes them to the {@link InvocationEventCollector}.
  *
  * <p>Targets, arguments and return values are recorded as strings. Since {@code toString} may be student code,
@@ -47,32 +49,36 @@ public class InvocationTracer implements BeforeHook, AfterHook {
 
     private void traceMethod(Invocation invocation) {
         eventCollector.event(MethodCallEvent.builder()
-                .id(invocation.id().toString())
-                .method(invocation.name())
-                .types(invocation.parameterTypes().stream().map(Class::getSimpleName).toList())
-                .arguments(invocation.arguments().stream().map(InvocationTracer::safeObjectToStringTimeout).toList())
-                .clazz(invocation.targetClass())
-                .target(safeObjectToStringTimeout(invocation.target()))
+                .id(invocation.id())
+                .targetClass(invocation.targetClass())
+                .target(invocation.target() == null ? null : safeObjectToStringTimeout(invocation.target()))
+                .method(invocation.executableName())
+                .parameterTypes(invocation.parameterTypes())
+                .arguments(argumentsToString(invocation))
                 .build());
     }
 
     private void traceConstructor(Invocation invocation) {
         eventCollector.event(ConstructorCallEvent.builder()
-                .id(invocation.id().toString())
-                .clazz(invocation.targetClass())
-                .types(invocation.parameterTypes())
-                .arguments(invocation.arguments().stream().map(InvocationTracer::safeObjectToStringTimeout).toList())
+                .id(invocation.id())
+                .targetClass(invocation.targetClass())
+                .parameterTypes(invocation.parameterTypes())
+                .arguments(argumentsToString(invocation))
                 .build());
     }
 
     @Override
     public InvocationResult apply(InvocationResult result) {
         eventCollector.event(InvocationReturnEvent.builder()
-                .id(result.id().toString())
+                .id(result.id())
+                .returnType(result.invocation().returnType())
                 .returnValue(safeObjectToStringTimeout(result.returnValue()))
-                .isVoid(result.invocation().executable() instanceof Method m && m.getReturnType() == void.class)
                 .build());
         return result;
+    }
+
+    private static List<String> argumentsToString(Invocation invocation) {
+        return invocation.arguments().stream().map(InvocationTracer::safeObjectToStringTimeout).toList();
     }
 
     private static String safeObjectToStringTimeout(Object o) {
@@ -91,7 +97,30 @@ public class InvocationTracer implements BeforeHook, AfterHook {
         }
 
         try {
-            return o.getClass().isArray() ? Arrays.deepToString((Object[]) o) : o.toString();
+            if (o instanceof Object[] arr) {
+                return Arrays.deepToString(arr);
+            } else if (o.getClass().isArray()) { // o is an array of primitives
+                Class<?> eClass = o.getClass();
+                if (eClass == byte[].class)
+                    return Arrays.toString((byte[]) o);
+                else if (eClass == short[].class)
+                    return Arrays.toString((short[]) o);
+                else if (eClass == int[].class)
+                    return Arrays.toString((int[]) o);
+                else if (eClass == long[].class)
+                    return Arrays.toString((long[]) o);
+                else if (eClass == char[].class)
+                    return Arrays.toString((char[]) o);
+                else if (eClass == float[].class)
+                    return Arrays.toString((float[]) o);
+                else if (eClass == double[].class)
+                    return Arrays.toString((double[]) o);
+                else if (eClass == boolean[].class)
+                    return Arrays.toString((boolean[]) o);
+                throw new IllegalStateException("unexpected array type: " + eClass.getName());
+            } else {
+                return o.toString();
+            }
         } catch (Exception e) {
             throw new TargetInvocationException("an exception occurred while invoking the toString method of an object", e);
         }

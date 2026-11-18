@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 
 import java.util.List;
-import java.util.UUID;
 
 class InvocationPipelineTests {
 
@@ -27,42 +26,30 @@ class InvocationPipelineTests {
 
     @Test
     void shouldInvokeResolvedMethod() throws NoSuchMethodException {
-        Invocation invocation = Invocation.builder()
-                .id(UUID.randomUUID())
-                .arguments(List.of())
-                .target(new Foo("foo"))
-                .build()
-                .withExecutable(Foo.class.getMethod("getName"));
+        InvocationRequest request = InvocationRequest.fromMethod(Foo.class.getMethod("getName"),
+                Foo.class,
+                new Foo("foo"),
+                List.of());
 
-        Object result = InvocationPipeline.empty().run(invocation).returnValue();
+        Object result = InvocationPipeline.empty().run(request).returnValue();
 
         Assertions.assertEquals("foo", result);
     }
 
     @Test
-    void shouldInvokeResolvedConstructor() throws NoSuchMethodException {
-        Invocation invocation = Invocation.builder()
-                .id(UUID.randomUUID())
+    void shouldInvokeResolvedConstructor() {
+        InvocationRequest request = InvocationRequest.builder()
+                .targetClass(Foo.class)
+                .target(null)
+                .argumentTypes(List.of(String.class))
                 .arguments(List.of("foo"))
-                .build()
-                .withExecutable(Foo.class.getConstructor(String.class));
+                .returnType(Foo.class)
+                .name("<init>")
+                .build();
 
-        Object result = InvocationPipeline.empty().run(invocation).returnValue();
+        Object result = InvocationPipeline.empty().run(request).returnValue();
 
         Assertions.assertInstanceOf(Foo.class, result);
         Assertions.assertEquals("foo", ((Foo) result).getName());
     }
-
-    @Test
-    void shouldThrowIfExecutableIsNotResolved() {
-        Invocation invocation = Invocation.builder()
-                .id(UUID.randomUUID())
-                .name("getName")
-                .arguments(List.of())
-                .target(new Foo("foo"))
-                .build();
-
-        Assertions.assertThrows(IllegalStateException.class, () -> InvocationPipeline.empty().run(invocation));
-    }
-
 }

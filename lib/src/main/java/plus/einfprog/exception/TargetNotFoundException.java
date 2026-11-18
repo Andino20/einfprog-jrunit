@@ -26,7 +26,7 @@ public class TargetNotFoundException extends EinfprogJRunitException {
                 .collect(Collectors.joining(", ", "(", ")"));
         return new TargetNotFoundException(String.format(
                 "Method %s%s in class %s returns nothing (void), but the test expected it to return a value",
-                invocation.name(), parameters, invocation.targetClass().getSimpleName()));
+                invocation.executableName(), parameters, invocation.targetClass().getSimpleName()));
     }
 
 }
