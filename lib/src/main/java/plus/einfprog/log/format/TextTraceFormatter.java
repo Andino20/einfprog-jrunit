@@ -15,6 +15,7 @@ import plus.einfprog.log.event.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -28,7 +29,7 @@ public class TextTraceFormatter implements TraceFormatter {
 
     @Override
     public String format(List<InvocationEvent> trace) {
-        Map<String, InvocationReturnEvent> returns = new HashMap<>();
+        Map<UUID, InvocationReturnEvent> returns = new HashMap<>();
         for (InvocationEvent event : trace) {
             if (event instanceof InvocationReturnEvent e) {
                 returns.put(e.id(), e);
@@ -70,46 +71,47 @@ public class TextTraceFormatter implements TraceFormatter {
     }
 
     private static String methodCallToString(MethodCallEvent event) {
-        return targetToString(event) + "." + event.method() + argumentsToString(event.types(), event.arguments());
+        return targetToString(event) + "." + event.method() + argumentsToString(event.parameterTypes(), event.arguments());
     }
 
     private static String constructorCallToString(ConstructorCallEvent event) {
-        List<String> types = event.types().stream().map(Class::getSimpleName).toList();
-        return "new " + event.clazz().getSimpleName() + argumentsToString(types, event.arguments());
+        return "new " + event.targetClass().getSimpleName() + argumentsToString(event.parameterTypes(), event.arguments());
     }
 
     /**
      * Static methods are shown as {@code Class.method()}, instance methods as {@code object.method()}.
      */
     private static String targetToString(MethodCallEvent event) {
-        String className = event.clazz().getSimpleName();
-        if (event.target() == null || "null".equals(event.target().toString())) {
+        String className = event.targetClass().getSimpleName();
+        if (event.target() == null) {
             return className;
         }
         // shorten the default Object.toString(), e.g. "pkg.Foo@1b2c3d" to "Foo@1b2c3d"
-        String target = event.target().toString();
-        String defaultPrefix = event.clazz().getName() + "@";
+        String target = event.target();
+        String defaultPrefix = event.targetClass().getName() + "@";
         return target.startsWith(defaultPrefix) ? className + "@" + target.substring(defaultPrefix.length()) : target;
     }
 
-    private static String argumentsToString(List<String> types, List<String> arguments) {
+    private static String argumentsToString(List<Class<?>> types, List<String> arguments) {
         return IntStream.range(0, arguments.size())
-                .mapToObj(i -> quote(i < types.size() ? types.get(i) : "", arguments.get(i)))
+                .mapToObj(i -> quote(i < types.size() ? types.get(i) : null, arguments.get(i)))
                 .collect(Collectors.joining(", ", "(", ")"));
     }
 
     /**
      * Writes strings and chars the way they would appear in Java source code.
      */
-    private static String quote(String type, String argument) {
+    private static String quote(Class<?> type, String argument) {
         if ("null".equals(argument)) {
             return argument;
         }
-        return switch (type) {
-            case "String" -> '"' + argument + '"';
-            case "char", "Character" -> "'" + argument + "'";
-            default -> argument;
-        };
+        if (type == String.class) {
+            return '"' + argument + '"';
+        }
+        if (type == char.class || type == Character.class) {
+            return "'" + argument + "'";
+        }
+        return argument;
     }
 
     private static String describe(Throwable throwable) {
@@ -139,8 +141,7 @@ public class TextTraceFormatter implements TraceFormatter {
     }
 
     private static String valueToString(ValueWrapper value) {
-        String type = value.getType() == null ? "" : value.getType().getSimpleName();
-        return quote(type, value.getStringRepresentation());
+        return quote(value.getType(), value.getStringRepresentation());
     }
 
     private static String describeTargetException(Throwable cause) {
