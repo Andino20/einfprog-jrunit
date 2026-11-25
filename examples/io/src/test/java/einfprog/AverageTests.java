@@ -3,7 +3,7 @@ package einfprog;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.Settings;
-import plus.einfprog.io.IOAssertions;
+import plus.einfprog.assertion.IOAssertions;
 import plus.einfprog.io.Input;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 import plus.einfprog.reflection.Reflected;

@@ -5,7 +5,7 @@ public record Token(TokenType type,
                     int length,
                     String value) {
 
-    static boolean matches(Token actual, Token expected, double epsilon) {
+    public static boolean matches(Token actual, Token expected, double epsilon) {
         if (actual.type() != expected.type())
             return false;
         return switch (actual.type()) {

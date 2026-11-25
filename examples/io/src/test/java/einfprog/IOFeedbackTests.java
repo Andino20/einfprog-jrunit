@@ -3,9 +3,10 @@ package einfprog;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import plus.einfprog.io.IOAssertions;
+import plus.einfprog.assertion.IOAssertions;
 import plus.einfprog.io.Input;
 import plus.einfprog.junit.EinfprogJRunitExtension;
+import plus.einfprog.log.format.HumanReadableTraceFormatter;
 import plus.einfprog.reflection.Reflected;
 
 /**
@@ -16,7 +17,8 @@ import plus.einfprog.reflection.Reflected;
 public class IOFeedbackTests {
 
     @RegisterExtension
-    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault();
+    static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault()
+            .withFormatter(HumanReadableTraceFormatter::new);
 
     private static void run(String className, Input in) {
         IOAssertions.prepareInput(in);

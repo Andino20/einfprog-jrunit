@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-class Tokenizer {
+public class Tokenizer {
 
     private final String input;
     private int index;

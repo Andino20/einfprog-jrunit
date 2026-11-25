@@ -28,3 +28,19 @@ int add(int a, int b) {
 void thisThrows(Throwable t) throws Throwable {
     throw t;
 }
+
+int[] addVector(int[] a, int[] b) {
+    if (a.length != b.length) {
+        return null;
+    }
+
+    int[] c = new int[a.length];
+    for (int i = 0; i < a.length; i++) {
+        c[i] = a[i] + b[i];
+    }
+    return c;
+}
+
+boolean[][] getGraphBack(boolean[][] graph) {
+    return graph;
+}

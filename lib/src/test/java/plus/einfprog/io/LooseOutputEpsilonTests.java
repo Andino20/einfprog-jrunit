@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import plus.einfprog.Settings;
+import plus.einfprog.assertion.IOAssertions;
 import plus.einfprog.exception.OutputMismatchException;
 import plus.einfprog.junit.EinfprogJRunitExtension;
 

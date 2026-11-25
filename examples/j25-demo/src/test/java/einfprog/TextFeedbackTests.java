@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import plus.einfprog.assertion.ArrayAssertions;
 import plus.einfprog.junit.EinfprogJRunitExtension;
+import plus.einfprog.log.format.HumanReadableTraceFormatter;
 import plus.einfprog.log.format.TextTraceFormatter;
 import plus.einfprog.proxy.ProxyUtil;
 import plus.einfprog.reflection.Reflected;
@@ -17,7 +19,7 @@ public class TextFeedbackTests {
 
     @RegisterExtension
     static final EinfprogJRunitExtension einfprogJrunit = EinfprogJRunitExtension.getDefault()
-            .withFormatter(TextTraceFormatter::new);
+            .withFormatter(HumanReadableTraceFormatter::new);
 
     @Test
     void wrongResultTest() {
@@ -40,6 +42,22 @@ public class TextFeedbackTests {
     @Test
     void missingClassTest() {
         Reflected.on("Calculator").create();
+    }
+
+    @Test
+    void arrayTest() {
+        int[] a = {1, 2, 3};
+        int[] b = {3, 2, 1};
+
+        int[] c = ProxyUtil.create(ProgramProxy.class).addVector(a, b);
+        ArrayAssertions.assertArrayEquals(new int[]{1, 1, 1}, c, "Wrong array");
+    }
+
+    @Test
+    void multiDimensionalArrayTest() {
+        boolean[][] graph = {{true, false}, {false, true}};
+        boolean[][] graph2 = ProxyUtil.create(ProgramProxy.class).getGraphBack(graph);
+        ArrayAssertions.assertArrayEquals(new boolean[][]{{false, true}, {true, false}}, graph2, "Wrong graph");
     }
 
 }

@@ -1,7 +1,10 @@
-package plus.einfprog.io;
+package plus.einfprog.assertion;
 
 import plus.einfprog.EinfprogJRunit;
 import plus.einfprog.exception.OutputMismatchException;
+import plus.einfprog.io.Input;
+import plus.einfprog.io.Token;
+import plus.einfprog.io.Tokenizer;
 import plus.einfprog.io.diff.Diff;
 import plus.einfprog.io.diff.MyersAlgorithm;
 
